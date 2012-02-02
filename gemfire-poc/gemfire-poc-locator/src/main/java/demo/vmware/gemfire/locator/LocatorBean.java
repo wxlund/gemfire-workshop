@@ -82,4 +82,14 @@ public class LocatorBean
 		this.stateFile = state;
 	}
 
+	public String getLocators()
+	{
+		return locators;
+	}
+
+	public void setLocators(String locators)
+	{
+		this.locators = locators;
+	}
+
 }

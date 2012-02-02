@@ -92,7 +92,7 @@ public class PersistenceDirectoryGenerator
 			}
 			if (checkDirectory(dir))
 			{
-				log.trace("Directory for persistence is:" + dir);
+				log.info("Directory for persistence is:" + dir);
 				selected = dir.getAbsoluteFile();
 				selected.deleteOnExit();
 				return selected;

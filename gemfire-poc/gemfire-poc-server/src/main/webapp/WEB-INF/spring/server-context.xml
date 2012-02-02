@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:gfe="http://www.springframework.org/schema/gemfire" xmlns:p="http://www.springframework.org/schema/p"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+	http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd
+	http://www.springframework.org/schema/gemfire http://www.springframework.org/schema/gemfire/spring-gemfire-1.1.xsd">
+
+	<!-- when we run multiple cache servers on the same node, we need unique 
+		server ports -->
+	<bean id="portGenerator" class="demo.vmware.gemfire.util.DefaultServerPortGenerator" />
+
+	<!-- create a unique directory base directory for this node -->
+	<bean id="findDiskDir" class="demo.vmware.gemfire.util.PersistenceDirectoryGenerator"
+		destroy-method="unlock" init-method="findDirectory" p:parent="/tmp/server" />
+
+	<!-- gemfire.properties file for the cache server -->
+	<bean id="props"
+		class="org.springframework.beans.factory.config.PropertiesFactoryBean"
+		p:ignoreResourceNotFound="true">
+		<property name="locations">
+			<list>
+				<value>classpath:gemfire-server.properties</value>
+			</list>
+		</property>
+		<property name="properties">
+			<props>
+				<prop key="locators">localhost[10334]</prop>
+				<prop key="license-data-management">G04E0-MFK43-M8E1H-0ZARK-AV25A</prop>
+				<prop key="license-application-cache"></prop>
+				<prop key="mcast-port">0</prop>
+				<prop key="log-level">SEVERE</prop>
+			</props>
+		</property>
+	</bean>
+
+	<!-- gemfire base cache configuration -->
+	<gfe:cache id="cache" properties-ref="props"
+		cache-xml-location="classpath:cache-server.xml" />
+
+	<!-- this makes the cache server be a 'server' in the grid -->
+	<gfe:cache-server id="advanced-config" auto-startup="true"
+		cache-ref="cache" port="#{portGenerator.generatePort()}" />
+
+	<bean id="diskStore" class="demo.vmware.gemfire.util.GemfireDiskStore"
+		init-method="init" p:cache-ref="cache" p:baseDir="#{findDiskDir.getSelected()}"
+		p:diskStoreName="default" />
+
+	<bean id="cache-logger" class="demo.vmware.gemfire.util.CacheLogger" />
+
+    <gfe:partitioned-region id="SIMPLE" copies="1" name="SIMPLE" cache-ref="cache">
+    	<gfe:cache-listener ref="cache-logger" />
+    </gfe:partitioned-region>
+    
+
+</beans>

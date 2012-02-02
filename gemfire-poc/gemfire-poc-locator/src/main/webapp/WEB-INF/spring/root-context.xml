@@ -4,13 +4,11 @@
 	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
 	http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd">
 
-    <context:property-placeholder location="classpath:/common.properties" ignore-resource-not-found="true"/>
-
-	<context:annotation-config />
+    <context:property-override location="classpath:/gemfire-poc.properties" ignore-resource-not-found="true"/>
 
     <!-- create a unique directory base directory for this node -->
     <bean id="findDiskDir" class="demo.vmware.gemfire.util.PersistenceDirectoryGenerator" destroy-method="unlock" init-method="findDirectory">
-        <property name="parent" value="${java.io.tmpdir}/locator" />
+        <property name="parent" value="/tmp/locator" />
     </bean>
 
     <bean id="locator" class="demo.vmware.gemfire.locator.LocatorBean" init-method="startLocator" destroy-method="stopLocator">

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gfe="http://www.springframework.org/schema/gemfire"
+    xmlns:context="http://www.springframework.org/schema/context" xmlns:util="http://www.springframework.org/schema/util" xmlns:p="http://www.springframework.org/schema/p"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/gemfire http://www.springframework.org/schema/gemfire/spring-gemfire-1.1.xsd
+        http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd
+        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd">
+
+	<context:component-scan base-package="demo.vmware.dao"/>
+
+    <!-- Generic properties that we can set, such as where to store data and log files -->
+    <context:property-placeholder system-properties-mode="OVERRIDE" location="classpath:/common.properties" />
+    
+    <!-- gemfire.properties file for the cache server -->
+    <util:properties id="props" location="classpath:gemfire-client.properties" local-override="true"/>
+
+    <gfe:client-cache pool-name="client" properties-ref="props" cache-xml-location="classpath:cache-client.xml" />
+
+    <gfe:pool id="client" subscription-enabled="true">
+        <gfe:locator host="${locator.host1}" port="${locator.port1}" />
+        <gfe:locator host="${locator.host2}" port="${locator.port2}" />
+    </gfe:pool>
+   
+	<bean id="gtDummy" class="org.springframework.data.gemfire.GemfireTemplate" p:region-ref="DUMMY"/>
+    <gfe:client-region id="DUMMY" pool-name="client" />
+    
+    <bean id="gtMismo" class="org.springframework.data.gemfire.GemfireTemplate" p:region-ref="RESORT"/>
+    <gfe:client-region id="RESORT" pool-name="client" />
+       
+</beans>

@@ -6,7 +6,7 @@ import org.springframework.batch.item.ExecutionContext;
 import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.data.gemfire.GemfireTemplate;
 
-import demo.vmware.domain.disney.Resort;
+import demo.vmware.domain.Resort;
 
 public class InjectorBean
 {

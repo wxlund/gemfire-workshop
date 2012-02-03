@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gfe="http://www.springframework.org/schema/gemfire"
     xmlns:context="http://www.springframework.org/schema/context" xmlns:util="http://www.springframework.org/schema/util" xmlns:p="http://www.springframework.org/schema/p"
+     xmlns:c="http://www.springframework.org/schema/c"
     xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
         http://www.springframework.org/schema/gemfire http://www.springframework.org/schema/gemfire/spring-gemfire-1.1.xsd
         http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd
@@ -21,10 +22,17 @@
         <gfe:locator host="${locator.host2}" port="${locator.port2}" />
     </gfe:pool>
    
+   	<bean id="cache-logger" class="demo.vmware.util.CacheLogger" />
+	
 	<bean id="gtDummy" class="org.springframework.data.gemfire.GemfireTemplate" p:region-ref="DUMMY"/>
-    <gfe:client-region id="DUMMY" pool-name="client" />
+    <gfe:client-region id="DUMMY" pool-name="client">
+    	<gfe:cache-listener ref="cache-logger"/>
+    	<gfe:key-interest durable="false">
+    		<bean id="key" class="java.lang.Integer" c:_0="2000" />
+    	</gfe:key-interest>
+    </gfe:client-region>
     
-    <bean id="gtMismo" class="org.springframework.data.gemfire.GemfireTemplate" p:region-ref="RESORT"/>
+    <bean id="gtResort" class="org.springframework.data.gemfire.GemfireTemplate" p:region-ref="RESORT"/>
     <gfe:client-region id="RESORT" pool-name="client" />
        
 </beans>

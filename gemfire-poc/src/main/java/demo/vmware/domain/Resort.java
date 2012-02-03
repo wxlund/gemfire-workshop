@@ -2,7 +2,7 @@
  * VMware
  * Copyright, VMware, Inc.
  */
-package demo.vmware.domain.disney;
+package demo.vmware.domain;
 
 import java.io.Serializable;
 

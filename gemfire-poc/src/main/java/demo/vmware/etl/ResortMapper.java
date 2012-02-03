@@ -4,7 +4,7 @@ import org.springframework.batch.item.file.mapping.FieldSetMapper;
 import org.springframework.batch.item.file.transform.FieldSet;
 import org.springframework.validation.BindException;
 
-import demo.vmware.domain.disney.Resort;
+import demo.vmware.domain.Resort;
 
 public class ResortMapper
 	implements FieldSetMapper<Resort>

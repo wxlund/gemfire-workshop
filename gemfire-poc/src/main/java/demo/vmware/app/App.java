@@ -1,6 +1,5 @@
 package demo.vmware.app;
 
-import java.util.List;
 import java.util.Scanner;
 import java.util.UUID;
 
@@ -9,7 +8,6 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.data.gemfire.GemfireTemplate;
 
 import demo.vmware.domain.Dummy;
-import demo.vmware.domain.Product;
 
 /**
  * Hello world!
@@ -37,7 +35,7 @@ public class App
 		System.out.println();
 		System.out.println("1. Populate Dummy Data");
 		System.out.println("2. Update Dummy Data");
-		System.out.println("8. Find Product By ID");
+		System.out.println("3. Add Dummy Data for Client Interest");
 		System.out.print("Your choice:");
 
 	}
@@ -62,9 +60,9 @@ public class App
 					useCase2_Main(mainContext);
 					break;
 				}
-				case 8:
+				case 3:
 				{
-					useCase8_Main(mainContext);
+					useCase3_Main(mainContext);
 					break;
 				}
 			}
@@ -103,16 +101,21 @@ public class App
 		gt.put(1, d);
 	}
 
-	public static void useCase8_Main(ApplicationContext mainContext)
+	public static void useCase3_Main(ApplicationContext mainContext)
 		throws Exception
 	{
-		GemfireTemplate gt = (GemfireTemplate) mainContext.getBean("gtProduct");
+		GemfireTemplate gt = (GemfireTemplate) mainContext.getBean("gtDummy");
 
-		List<Object> results = gt.query("productId = '123'").asList();
-		for (Object o : results)
-		{
-			Product p = (Product) o;
-			System.out.println(p);
-		}
+		// insert a dummy value with key of 2000
+		gt.put(2000, new Dummy("cqTest", 1234));
+		System.out.println("Press key to update Dummy Value with key of 2000.");
+		System.in.read();
+		
+		// update dummy
+		Dummy d = gt.get(2000);
+		d.setField2(4321);
+		d.setField3("cqAfter");
+		gt.put(2000, d);
 	}
+
 }

@@ -8,9 +8,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.data.gemfire.GemfireTemplate;
 
-import demo.vmware.domain.Commitment;
 import demo.vmware.domain.Dummy;
-import demo.vmware.etl.InjectorBean;
 
 public class Client {
 	
@@ -26,9 +24,7 @@ public class Client {
         System.out.println();
         System.out.println("1. Populate Dummy");
         System.out.println("2. Update Dummy");
-        System.out.println("3. Populate Data (Loan,Product,Commitment)");
         System.out.println("4. OQL for Dummy");
-        System.out.println("6. Search by ID for Commitment");
         System.out.print("Your choice:");
 
     }
@@ -47,16 +43,8 @@ public class Client {
                 	useCase2_Main(mainContext);
                     break;
                 }
-                case 3: {
-                	useCase3_Main(mainContext);
-                    break;
-                }
                 case 4: {
                 	useCase4_Main(mainContext);
-                    break;
-                }
-                case 6: {
-                	useCase6_Main(mainContext);
                     break;
                 }
             }
@@ -94,14 +82,9 @@ public class Client {
     	 System.out.println(gt.get(1));
     }
 
-    public static void useCase3_Main(ApplicationContext mainContext) throws Exception {
-    	InjectorBean ib = (InjectorBean) mainContext.getBean("InjectorBean");
-        ib.loadData();
-    }
-    
     public static void useCase4_Main(ApplicationContext mainContext) throws Exception {
     	GemfireTemplate gt = (GemfireTemplate) mainContext.getBean("gtDummy");
-    	List results = gt.query("select distinct d from /DUMMY d where field2 = 200").asList();
+    	List<Object> results = gt.query("select distinct d from /DUMMY d where field2 = 200").asList();
         for (Object o : results)
         {
         	Dummy d = (Dummy)o;
@@ -110,17 +93,4 @@ public class Client {
     	
     }
     
-    public static void useCase6_Main(ApplicationContext mainContext)
-			throws Exception {
-		GemfireTemplate gt = (GemfireTemplate) mainContext
-				.getBean("gtCommitment");
-		
-		List results = gt.query("userId = 'p8wert'").asList();
-        for (Object o : results)
-        {
-        	Commitment c = (Commitment)o;
-        	System.out.println(c);
-        }
-	}
-
 }

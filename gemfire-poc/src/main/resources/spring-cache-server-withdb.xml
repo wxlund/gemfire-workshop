@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gfe="http://www.springframework.org/schema/gemfire"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:util="http://www.springframework.org/schema/util" xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:jaxws="http://cxf.apache.org/jaxws"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/gemfire http://www.springframework.org/schema/gemfire/spring-gemfire-1.1.xsd
+        http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd
+        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd
+        http://cxf.apache.org/jaxws http://cxf.apache.org/schemas/jaxws.xsd">
+
+	<context:component-scan base-package="demo.vmware.dao" />
+	<context:component-scan base-package="demo.vmware.datasync" />
+
+	<!-- Generic properties that we can set, such as where to store data and 
+		log files -->
+	<context:property-placeholder
+		system-properties-mode="OVERRIDE" location="classpath:/common.properties" />
+
+	<!-- gemfire.properties file for the cache server -->
+	<bean id="props"
+		class="org.springframework.beans.factory.config.PropertiesFactoryBean">
+		<property name="locations">
+			<list>
+				<value>classpath:gemfire-server.properties</value>
+			</list>
+		</property>
+		<property name="properties">
+			<value>locators=${locator.host1}[${locator.port1}],${locator.host2}[${locator.port2}]
+			</value>
+		</property>
+	</bean>
+
+	<!-- when we run multiple cache servers on the same node, we need unique 
+		server ports -->
+	<bean id="portGenerator" class="demo.vmware.util.ServerPortGenerator" />
+
+	<!-- create a unique directory base directory for this node -->
+	<bean id="findDiskDir" class="demo.vmware.util.PersistenceDirectoryGenerator"
+		destroy-method="unlock" init-method="findDirectory">
+		<property name="parent" value="${data.location}" />
+	</bean>
+
+	<bean id="cache-logger" class="demo.vmware.util.CacheLogger" />
+
+	<!-- gemfire base cache configuration -->
+	<gfe:cache id="cache" properties-ref="props"
+		cache-xml-location="classpath:cache-server.xml" />
+
+	<!-- this makes the cache server be a 'server' in the grid -->
+	<gfe:cache-server id="advanced-config" auto-startup="true"
+		cache-ref="cache" port="#{portGenerator.generatePort()}" />
+
+	<bean id="diskStore" class="demo.vmware.util.GemfireDiskStore"
+		init-method="init">
+		<property name="cache" ref="cache" />
+		<property name="baseDir" value="#{findDiskDir.getSelected()}" />
+		<property name="diskStoreName" value="default" />
+	</bean>
+
+	<bean id="gatewayQueueAttributes" class="com.gemstone.gemfire.cache.util.GatewayQueueAttributes">
+		<property name="diskStoreName" value="#{diskStore.getStore().getName()}" />
+		<property name="enablePersistence" value="false" />
+		<property name="batchSize" value="1000" />
+		<property name="maximumQueueMemory" value="32" />
+	</bean>
+
+	<!-- DB WRITE THROUGH REGION  -->
+	<gfe:replicated-region id="RESORT_THRU" cache-ref="cache" name="RESORT_THRU"> 
+		<gfe:cache-listener ref="cache-logger" /> 
+		<gfe:cache-writer ref="resort-cache-writer" /> 
+	</gfe:replicated-region>
+
+	<!-- DB WRITE BEHIND REGION -->
+	<bean id="RESORT_BEHIND" p:name="RESORT_BEHIND"
+		class="org.springframework.data.gemfire.RegionFactoryBean"
+		p:cache-ref="cache">
+		<property name="cacheListeners" ref="cache-logger" />
+		<!-- <property name="cacheLoader" ref="cache-loader-resort" /> -->
+		<property name="attributes">
+			<bean class="org.springframework.data.gemfire.RegionAttributesFactoryBean"
+				p:initial-capacity="1024" p:enable-gateway="true">
+				<property name="partitionAttributes">
+					<bean
+						class="org.springframework.data.gemfire.PartitionAttributesFactoryBean"
+						p:redundant-copies="1" />
+				</property>
+			</bean>
+		</property>
+	</bean>
+
+	<bean id="gtResortThru" class="org.springframework.data.gemfire.GemfireTemplate"
+		p:region-ref="RESORT_THRU" />
+		
+	<bean id="gtResortBehind" class="org.springframework.data.gemfire.GemfireTemplate"
+		p:region-ref="RESORT_BEHIND" />
+
+	<!-- RESORT INJECTOR BEAN -->
+	<bean id="InjectorBean" class="demo.vmware.etl.InjectorBean"
+		init-method="loadData">
+		<property name="gtResort" ref="gtResortThru" />
+		<property name="resortItemReader" ref="resortItemReader" />
+		<property name="loadData" value="${load.data.boolean}" />
+	</bean>
+
+	<!-- DATABASE WRITE THROUGH BEANS -->
+	<bean id="resort-cache-writer" class="demo.vmware.datasync.ResortWriteThrough" /> 
+
+	<!-- DATABASE WRITE BEHIND BEANS -->
+	<bean id="resort-write-behind-listener" class="demo.vmware.datasync.ResortWriteBehind" />
+	<bean id="db-write-behind" class="demo.vmware.datasync.DBWriteBehindHub"
+		init-method="start" lazy-init="false">
+		<constructor-arg>
+			<array>
+				<ref bean="resort-write-behind-listener" />
+			</array>
+		</constructor-arg>
+	</bean>
+
+	<!-- DB Datasource -->
+	<bean class="org.apache.commons.dbcp.BasicDataSource"
+		destroy-method="close" id="dataSource">
+		<property name="driverClassName" value="org.h2.Driver" />
+		<property name="url" value="jdbc:h2:tcp://localhost:8043/griddb" />
+		<property name="username" value="sa" />
+	</bean>
+
+	<!-- SPRING BATCH STUFF -->
+	<bean id="resortItemReader" class="org.springframework.batch.item.file.FlatFileItemReader">
+		<property name="resource" value="classpath:/data/RESORTS.csv" />
+		<property name="lineMapper">
+			<bean class="org.springframework.batch.item.file.mapping.DefaultLineMapper">
+				<property name="lineTokenizer">
+					<bean
+						class="org.springframework.batch.item.file.transform.DelimitedLineTokenizer">
+						<property name="quoteCharacter" value="&quot;" />
+						<property name="names" value="ID,Name" />
+					</bean>
+				</property>
+				<property name="fieldSetMapper">
+					<bean class="demo.vmware.etl.ResortMapper" />
+				</property>
+			</bean>
+		</property>
+		<property name="linesToSkip" value="1" />
+	</bean>
+
+</beans>

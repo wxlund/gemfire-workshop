@@ -40,6 +40,20 @@
 		</gfe:key-interest>
 	</gfe:client-region>
 
+	<!-- Partitioned Region to test expiry -->
+	<bean id="gtDummyExpire" class="org.springframework.data.gemfire.GemfireTemplate"
+		p:region-ref="DUMMY_EXPIRE" />
+	<gfe:client-region id="DUMMY_EXPIRE" pool-name="client">
+		<gfe:cache-listener ref="cache-logger" />
+	</gfe:client-region>
+	
+	<!-- Partitioned Region to test eviction -->
+	<bean id="gtDummyEvict" class="org.springframework.data.gemfire.GemfireTemplate"
+		p:region-ref="DUMMY_EVICT" />
+	<gfe:client-region id="DUMMY_EVICT" pool-name="client">
+		<gfe:cache-listener ref="cache-logger" />
+	</gfe:client-region>
+	
 	<!-- Continuous Query -->
 	<bean id="cqListener" class="demo.vmware.util.CQListener" />
 

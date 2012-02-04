@@ -41,6 +41,8 @@ public class Client
 		System.out.println("3. OQL for Dummy");
 		System.out.println("4. Declarative caching");
 		System.out.println("5. Distributed Function");
+		System.out.println("6. Put for expiry");
+		System.out.println("7. Put for eviction");
 		System.out.print("Your choice:");
 
 	}
@@ -76,10 +78,20 @@ public class Client
 					break;
 				}
 				case 5:
-					{
-						useCase5_Main(mainContext);
-						break;
-					}
+				{
+					useCase5_Main(mainContext);
+					break;
+				}
+				case 6:
+				{
+					useCase6_Main(mainContext);
+					break;
+				}
+				case 7:
+				{
+					useCase7_Main(mainContext);
+					break;
+				}
 			}
 		}
 	}
@@ -158,24 +170,49 @@ public class Client
 		throws Exception
 	{
 		GemfireTemplate gt = (GemfireTemplate) mainContext.getBean("gtDummy");
-		
+
 		Set<Integer> keys = new HashSet<Integer>();
-		for(int i = 0; i < 500; i++)
+		for (int i = 0; i < 500; i++)
 		{
 			keys.add(i);
 		}
-		
-		Execution exec = FunctionService.onRegion(gt.getRegion())
-			.withFilter(keys);
-		
-		ResultCollector rc = exec.execute(AggregateField2Function.ID);
-		
-		List results = (List) rc.getResult();
-		
-		for(Object o : results)
+
+		Execution exec = FunctionService.onRegion(gt.getRegion()).withFilter(
+				keys);
+
+		ResultCollector<?, ?> rc = exec.execute(AggregateField2Function.ID);
+
+		@SuppressWarnings("unchecked")
+		List<Object> results = (List<Object>) rc.getResult();
+
+		for (Object o : results)
 		{
 			System.out.println(o.toString());
 		}
+	}
+
+	public static void useCase6_Main(ApplicationContext mainContext)
+		throws Exception
+	{
+
+		GemfireTemplate gt = (GemfireTemplate) mainContext
+				.getBean("gtDummyExpire");
+
+		// insert dummy if it doesn't exist
+		gt.put(1, new Dummy("field1", 100));
+
+	}
+
+	public static void useCase7_Main(ApplicationContext mainContext)
+		throws Exception
+	{
+
+		GemfireTemplate gt = (GemfireTemplate) mainContext
+				.getBean("gtDummyEvict");
+
+		// insert dummy if it doesn't exist
+		gt.put(UUID.randomUUID().toString(), new Dummy("field1", 100));
+
 	}
 
 }

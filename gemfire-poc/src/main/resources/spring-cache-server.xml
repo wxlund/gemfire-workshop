@@ -77,6 +77,21 @@
 		<gfe:cache-listener ref="cache-logger" />
 	</gfe:replicated-region>
 
+	<gfe:partitioned-region id="DUMMY_EXPIRE" copies="1"
+		name="DUMMY_EXPIRE" cache-ref="cache">
+		<gfe:cache-writer ref="dummy-cache-writer" />
+		<gfe:entry-ttl timeout="1" action="DESTROY" />
+	</gfe:partitioned-region>
+
+	<gfe:partitioned-region id="DUMMY_EVICT" copies="1"
+		name="DUMMY_EVICT" cache-ref="cache">
+	    <gfe:disk-store max-oplog-size="10">
+	        <gfe:disk-dir location="#{findDiskDir.getSelected()}" max-size="10"/>
+	    </gfe:disk-store>
+		<gfe:cache-writer ref="dummy-cache-writer" />
+		<gfe:eviction threshold="2" type="ENTRY_COUNT" action="OVERFLOW_TO_DISK" />
+	</gfe:partitioned-region>
+
 	<bean id="gtDummy" class="org.springframework.data.gemfire.GemfireTemplate"
 		p:region-ref="DUMMY" />
 	<bean id="gtResort" class="org.springframework.data.gemfire.GemfireTemplate"

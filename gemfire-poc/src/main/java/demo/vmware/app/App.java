@@ -1,7 +1,6 @@
 package demo.vmware.app;
 
 import java.util.Scanner;
-import java.util.UUID;
 
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
@@ -36,6 +35,7 @@ public class App
 		System.out.println("1. Populate Dummy Data");
 		System.out.println("2. Update Dummy Data");
 		System.out.println("3. Add Dummy Data for Client Interest");
+		System.out.println("4. Add Dummy Data for Client CQ");
 		System.out.print("Your choice:");
 
 	}
@@ -65,6 +65,11 @@ public class App
 					useCase3_Main(mainContext);
 					break;
 				}
+				case 4:
+				{
+					useCase4_Main(mainContext);
+					break;
+				}
 			}
 		}
 	}
@@ -78,7 +83,7 @@ public class App
 
 		for (int i = 0; i < puts; i++)
 		{
-			gt.put(UUID.randomUUID(), new Dummy("field1-" + i, i));
+			gt.put(i, new Dummy("field1-" + i, i));
 		}
 		long stop = System.currentTimeMillis();
 
@@ -110,12 +115,39 @@ public class App
 		gt.put(2000, new Dummy("cqTest", 1234));
 		System.out.println("Press key to update Dummy Value with key of 2000.");
 		System.in.read();
-		
+
 		// update dummy
 		Dummy d = gt.get(2000);
 		d.setField2(4321);
 		d.setField3("cqAfter");
 		gt.put(2000, d);
+	}
+
+	public static void useCase4_Main(ApplicationContext mainContext)
+		throws Exception
+	{
+		GemfireTemplate gt = (GemfireTemplate) mainContext.getBean("gtDummy");
+		int key = 2010;
+
+		// insert a dummy value with field2 of 54321
+		gt.put(key, new Dummy("cqTest", 54321));
+		System.out
+				.println("Press key to update Dummy Value of field2 with 12345.");
+		System.in.read();
+
+		// update dummy
+		Dummy d = gt.get(key);
+		d.setField2(12345);
+		gt.put(key, d);
+		System.out
+				.println("Press key to update Dummy Value of field2 with 22222.");
+		System.in.read();
+
+		// update dummy
+		d = gt.get(key);
+		d.setField2(22222);
+		gt.put(key, d);
+
 	}
 
 }

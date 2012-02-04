@@ -1,16 +1,22 @@
 package demo.vmware.app;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Scanner;
+import java.util.Set;
 import java.util.UUID;
 
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.data.gemfire.GemfireTemplate;
 
-import com.gemstone.gemfire.cache.Region;
+import com.gemstone.gemfire.cache.execute.Execution;
+import com.gemstone.gemfire.cache.execute.FunctionService;
+import com.gemstone.gemfire.cache.execute.ResultCollector;
 
+import demo.vmware.dao.DeclarativeCachingDAO;
 import demo.vmware.domain.Dummy;
+import demo.vmware.function.AggregateField2Function;
 
 public class Client
 {
@@ -33,6 +39,10 @@ public class Client
 		System.out.println("1. Populate Dummy");
 		System.out.println("2. Update Dummy");
 		System.out.println("3. OQL for Dummy");
+		System.out.println("4. Declarative caching");
+		System.out.println("5. Distributed Function");
+		System.out.println("6. Put for expiry");
+		System.out.println("7. Put for eviction");
 		System.out.print("Your choice:");
 
 	}
@@ -65,6 +75,21 @@ public class Client
 				case 4:
 				{
 					useCase4_Main(mainContext);
+					break;
+				}
+				case 5:
+				{
+					useCase5_Main(mainContext);
+					break;
+				}
+				case 6:
+				{
+					useCase6_Main(mainContext);
+					break;
+				}
+				case 7:
+				{
+					useCase7_Main(mainContext);
 					break;
 				}
 			}
@@ -120,23 +145,74 @@ public class Client
 
 	}
 
-	@SuppressWarnings("unchecked")
 	public static void useCase4_Main(ApplicationContext mainContext)
 		throws Exception
 	{
 
+		DeclarativeCachingDAO declarativeCachingDao = (DeclarativeCachingDAO) mainContext
+				.getBean("declarativeCachingDao");
+
+		int key = 5678;
+
+		Dummy d = declarativeCachingDao.getEntityForId(key);
+		System.out.println("Got entity: " + d.toString());
+		System.out.println("Press any key to evict entity");
+		System.in.read();
+
+		declarativeCachingDao.removeEntityById(key);
+		System.out.println("Press any key to call remove again");
+		System.in.read();
+
+		declarativeCachingDao.removeEntityById(key);
+	}
+
+	public static void useCase5_Main(ApplicationContext mainContext)
+		throws Exception
+	{
 		GemfireTemplate gt = (GemfireTemplate) mainContext.getBean("gtDummy");
 
+		Set<Integer> keys = new HashSet<Integer>();
+		for (int i = 0; i < 500; i++)
+		{
+			keys.add(i);
+		}
+
+		Execution exec = FunctionService.onRegion(gt.getRegion()).withFilter(
+				keys);
+
+		ResultCollector<?, ?> rc = exec.execute(AggregateField2Function.ID);
+
+		@SuppressWarnings("unchecked")
+		List<Object> results = (List<Object>) rc.getResult();
+
+		for (Object o : results)
+		{
+			System.out.println(o.toString());
+		}
+	}
+
+	public static void useCase6_Main(ApplicationContext mainContext)
+		throws Exception
+	{
+
+		GemfireTemplate gt = (GemfireTemplate) mainContext
+				.getBean("gtDummyExpire");
+
 		// insert dummy if it doesn't exist
-		((Region<Integer, Dummy>) gt.getRegion()).registerInterest(2000);
+		gt.put(1, new Dummy("field1", 100));
 
-		// update dummy
-		Dummy d = gt.get(1);
-		d.setField2(200);
-		d.setField3("New Field");
-		gt.put(1, d);
+	}
 
-		System.out.println(gt.get(1));
+	public static void useCase7_Main(ApplicationContext mainContext)
+		throws Exception
+	{
+
+		GemfireTemplate gt = (GemfireTemplate) mainContext
+				.getBean("gtDummyEvict");
+
+		// insert dummy if it doesn't exist
+		gt.put(UUID.randomUUID().toString(), new Dummy("field1", 100));
+
 	}
 
 }

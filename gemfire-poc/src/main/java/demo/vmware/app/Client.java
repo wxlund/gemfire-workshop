@@ -1,15 +1,22 @@
 package demo.vmware.app;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Scanner;
+import java.util.Set;
 import java.util.UUID;
 
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.data.gemfire.GemfireTemplate;
 
+import com.gemstone.gemfire.cache.execute.Execution;
+import com.gemstone.gemfire.cache.execute.FunctionService;
+import com.gemstone.gemfire.cache.execute.ResultCollector;
+
 import demo.vmware.dao.DeclarativeCachingDAO;
 import demo.vmware.domain.Dummy;
+import demo.vmware.function.AggregateField2Function;
 
 public class Client
 {
@@ -33,6 +40,7 @@ public class Client
 		System.out.println("2. Update Dummy");
 		System.out.println("3. OQL for Dummy");
 		System.out.println("4. Declarative caching");
+		System.out.println("5. Distributed Function");
 		System.out.print("Your choice:");
 
 	}
@@ -67,6 +75,11 @@ public class Client
 					useCase4_Main(mainContext);
 					break;
 				}
+				case 5:
+					{
+						useCase5_Main(mainContext);
+						break;
+					}
 			}
 		}
 	}
@@ -144,12 +157,25 @@ public class Client
 	public static void useCase5_Main(ApplicationContext mainContext)
 		throws Exception
 	{
-
-		DeclarativeCachingDAO declarativeCachingDao = (DeclarativeCachingDAO) mainContext
-				.getBean("declarativeCachingDao");
-
-		declarativeCachingDao.removeEntityById(5678);
-
+		GemfireTemplate gt = (GemfireTemplate) mainContext.getBean("gtDummy");
+		
+		Set<Integer> keys = new HashSet<Integer>();
+		for(int i = 0; i < 500; i++)
+		{
+			keys.add(i);
+		}
+		
+		Execution exec = FunctionService.onRegion(gt.getRegion())
+			.withFilter(keys);
+		
+		ResultCollector rc = exec.execute(AggregateField2Function.ID);
+		
+		List results = (List) rc.getResult();
+		
+		for(Object o : results)
+		{
+			System.out.println(o.toString());
+		}
 	}
 
 }

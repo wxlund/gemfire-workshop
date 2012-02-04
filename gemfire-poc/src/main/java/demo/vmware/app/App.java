@@ -1,7 +1,6 @@
 package demo.vmware.app;
 
 import java.util.Scanner;
-import java.util.UUID;
 
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
@@ -84,7 +83,7 @@ public class App
 
 		for (int i = 0; i < puts; i++)
 		{
-			gt.put(UUID.randomUUID(), new Dummy("field1-" + i, i));
+			gt.put(i, new Dummy("field1-" + i, i));
 		}
 		long stop = System.currentTimeMillis();
 

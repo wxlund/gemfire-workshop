@@ -3,11 +3,12 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gfe="http://www.springframework.org/schema/gemfire"
 	xmlns:context="http://www.springframework.org/schema/context"
 	xmlns:util="http://www.springframework.org/schema/util" xmlns:p="http://www.springframework.org/schema/p"
-	xmlns:c="http://www.springframework.org/schema/c"
+	xmlns:c="http://www.springframework.org/schema/c" xmlns:cache="http://www.springframework.org/schema/cache"
 	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
         http://www.springframework.org/schema/gemfire http://www.springframework.org/schema/gemfire/spring-gemfire-1.1.xsd
         http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd
-        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd">
+        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd
+        http://www.springframework.org/schema/cache http://www.springframework.org/schema/cache/spring-cache.xsd">
 
 	<context:component-scan base-package="demo.vmware.dao" />
 
@@ -28,8 +29,8 @@
 		<gfe:locator host="${locator.host2}" port="${locator.port2}" />
 	</gfe:pool>
 
+	<!-- Simple Partitioned Region with a listener and interest registration -->
 	<bean id="cache-logger" class="demo.vmware.util.CacheLogger" />
-
 	<bean id="gtDummy" class="org.springframework.data.gemfire.GemfireTemplate"
 		p:region-ref="DUMMY" />
 	<gfe:client-region id="DUMMY" pool-name="client">
@@ -39,11 +40,19 @@
 		</gfe:key-interest>
 	</gfe:client-region>
 
+	<!-- Continuous Query -->
 	<bean id="cqListener" class="demo.vmware.util.CQListener" />
 
 	<gfe:cq-listener-container>
-		<gfe:listener ref="cqListener" query="select * from /DUMMY where field2=54321" />
+		<gfe:listener ref="cqListener"
+			query="select * from /DUMMY where field2=54321" />
 	</gfe:cq-listener-container>
+
+	<!-- Declarative Caching -->
+	<cache:annotation-driven />
+	<bean id="cacheManager"
+		class="org.springframework.data.gemfire.support.GemfireCacheManager"
+		p:cache-ref="gemfire-cache" />
 
 	<bean id="gtResort" class="org.springframework.data.gemfire.GemfireTemplate"
 		p:region-ref="RESORT" />

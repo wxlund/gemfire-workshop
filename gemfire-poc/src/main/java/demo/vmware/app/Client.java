@@ -8,8 +8,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.data.gemfire.GemfireTemplate;
 
-import com.gemstone.gemfire.cache.Region;
-
+import demo.vmware.dao.DeclarativeCachingDAO;
 import demo.vmware.domain.Dummy;
 
 public class Client
@@ -33,6 +32,7 @@ public class Client
 		System.out.println("1. Populate Dummy");
 		System.out.println("2. Update Dummy");
 		System.out.println("3. OQL for Dummy");
+		System.out.println("4. Declarative caching");
 		System.out.print("Your choice:");
 
 	}
@@ -120,23 +120,36 @@ public class Client
 
 	}
 
-	@SuppressWarnings("unchecked")
 	public static void useCase4_Main(ApplicationContext mainContext)
 		throws Exception
 	{
 
-		GemfireTemplate gt = (GemfireTemplate) mainContext.getBean("gtDummy");
+		DeclarativeCachingDAO declarativeCachingDao = (DeclarativeCachingDAO) mainContext
+				.getBean("declarativeCachingDao");
 
-		// insert dummy if it doesn't exist
-		((Region<Integer, Dummy>) gt.getRegion()).registerInterest(2000);
+		int key = 5678;
 
-		// update dummy
-		Dummy d = gt.get(1);
-		d.setField2(200);
-		d.setField3("New Field");
-		gt.put(1, d);
+		Dummy d = declarativeCachingDao.getEntityForId(key);
+		System.out.println("Got entity: " + d.toString());
+		System.out.println("Press any key to evict entity");
+		System.in.read();
 
-		System.out.println(gt.get(1));
+		declarativeCachingDao.removeEntityById(key);
+		System.out.println("Press any key to call remove again");
+		System.in.read();
+
+		declarativeCachingDao.removeEntityById(key);
+	}
+
+	public static void useCase5_Main(ApplicationContext mainContext)
+		throws Exception
+	{
+
+		DeclarativeCachingDAO declarativeCachingDao = (DeclarativeCachingDAO) mainContext
+				.getBean("declarativeCachingDao");
+
+		declarativeCachingDao.removeEntityById(5678);
+
 	}
 
 }

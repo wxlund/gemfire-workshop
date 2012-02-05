@@ -79,12 +79,12 @@
 		<property name="diskStoreName" value="default" />
 	</bean>
 
-	<bean id="gatewayQueueAttributes" class="com.gemstone.gemfire.cache.util.GatewayQueueAttributes">
-		<property name="diskStoreName" value="#{diskStore.getStore().getName()}" />
-		<property name="enablePersistence" value="false" />
-		<property name="batchSize" value="1000" />
-		<property name="maximumQueueMemory" value="32" />
-	</bean>
+	<bean id="gatewayQueueAttributes" class="com.gemstone.gemfire.cache.util.GatewayQueueAttributes"
+		p:diskStoreName="#{diskStore.getStore().getName()}" 
+		p:enablePersistence="false"
+		p:batchSize="1000"
+		p:maximumQueueMemory="32"
+		p:batchConflation="true" />
 
 	<!-- GEMFIRE REGION DEFINITIONS -->
 	<gfe:partitioned-region id="DUMMY" copies="1"

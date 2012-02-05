@@ -18,7 +18,7 @@ import com.gemstone.gemfire.security.AccessControl;
 import com.gemstone.gemfire.security.NotAuthorizedException;
 
 /**
- * TODO: Describe RoleBasedAccessControl
+ * A simple role based access controller for GemFire
  * 
  * @author <a href="mailto:cdelashmutt@vmware.com">cdelashmutt</a>
  * @version 1.0

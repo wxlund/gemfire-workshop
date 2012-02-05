@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<launchConfiguration type="org.eclipse.jdt.launching.localJavaApplication">
+<listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
+<listEntry value="/gemfire-poc/src/main/java/demo/vmware/app/WANDatanode.java"/>
+</listAttribute>
+<listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_TYPES">
+<listEntry value="1"/>
+</listAttribute>
+<stringAttribute key="org.eclipse.jdt.launching.CLASSPATH_PROVIDER" value="org.maven.ide.eclipse.launchconfig.classpathProvider"/>
+<stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="demo.vmware.app.WANDatanode"/>
+<stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="gemfire-poc"/>
+<stringAttribute key="org.eclipse.jdt.launching.SOURCE_PATH_PROVIDER" value="org.maven.ide.eclipse.launchconfig.sourcepathProvider"/>
+<stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-Dlocator.port1=10336 -Dlocator.port2=10337 -Ddata.location=${project_loc:/gemfire-poc}/target/data -Xmx2048m -Dwan.site=Site2 -Dwan.port=35001 -Dwan.remote.id=Site1 -Dwan.remote.host=localhost -Dwan.remote.port=35000"/>
+</launchConfiguration>

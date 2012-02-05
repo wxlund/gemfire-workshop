@@ -20,7 +20,7 @@ import com.gemstone.gemfire.security.AuthenticationFailedException;
 import com.gemstone.gemfire.security.Authenticator;
 
 /**
- * TODO: Describe SpringSecurityAuthenticator
+ * Ties GemFire into Spring Security
  *
  * @author <a href="mailto:cdelashmutt@vmware.com">cdelashmutt</a>
  * @version 1.0

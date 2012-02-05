@@ -51,6 +51,22 @@
 	<!-- gemfire base cache configuration -->
 	<gfe:cache id="cache" properties-ref="props"
 		cache-xml-location="classpath:cache-server.xml" />
+		
+	<!-- WAN -->
+	<bean id="gatewayHub" class="demo.vmware.datasync.GatewayHubBean"
+		p:id="${wan.site}" p:port="${wan.port}" p:cache-ref="cache">
+		<property name="gateways">
+			<list>
+				<bean class="demo.vmware.datasync.GatewayBean" p:id="${wan.remote.id}" p:attribs-ref="gatewayQueueAttributes">
+					<property name="endpoints">
+						<bean class="demo.vmware.datasync.GatewayEndpointBean"
+							p:id="${wan.remote.id}-${wan.remote.host}" p:host="${wan.remote.host}"
+							p:port="${wan.remote.port}" />
+					</property>
+				</bean>
+			</list>
+		</property>	
+	</bean>
 
 	<!-- this makes the cache server be a 'server' in the grid -->
 	<gfe:cache-server id="advanced-config" auto-startup="true"
@@ -81,22 +97,6 @@
 		<gfe:cache-listener ref="cache-logger" />
 	</gfe:replicated-region>
 
-	<gfe:partitioned-region id="DUMMY_EXPIRE"
-		copies="1" name="DUMMY_EXPIRE" cache-ref="cache">
-		<gfe:cache-writer ref="dummy-cache-writer" />
-		<gfe:entry-ttl timeout="1" action="DESTROY" />
-	</gfe:partitioned-region>
-
-	<gfe:partitioned-region id="DUMMY_EVICT" copies="1"
-		name="DUMMY_EVICT" cache-ref="cache">
-		<gfe:disk-store max-oplog-size="10">
-			<gfe:disk-dir location="#{findDiskDir.getSelected()}"
-				max-size="10" />
-		</gfe:disk-store>
-		<gfe:cache-writer ref="dummy-cache-writer" />
-		<gfe:eviction threshold="2" type="ENTRY_COUNT" action="OVERFLOW_TO_DISK" />
-	</gfe:partitioned-region>
-
 	<bean id="gtDummy" class="org.springframework.data.gemfire.GemfireTemplate"
 		p:region-ref="DUMMY" />
 	<bean id="gtResort" class="org.springframework.data.gemfire.GemfireTemplate"
@@ -112,12 +112,6 @@
 
 	<!-- DATABASE WRITE THROUGH BEANS -->
 	<bean id="dummy-cache-writer" class="demo.vmware.datasync.DummyCacheWriter" />
-
-	<!-- <bean class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close" 
-		id="dataSource"> <property name="driverClassName" value="${database.driverClassName}"/> 
-		<property name="url" value="${database.url}"/> <property name="username" 
-		value="${database.username}"/> <property name="password" value="${database.password}"/> 
-		</bean> -->
 
 	<!-- SPRING BATCH STUFF -->
 	<bean id="resortItemReader" class="org.springframework.batch.item.file.FlatFileItemReader">
@@ -139,30 +133,22 @@
 		<property name="linesToSkip" value="1" />
 	</bean>
 
-	<!-- Bean to register functions for execution -->
-	<bean id="functionRegistrar" class="demo.vmware.util.FunctionRegistrar">
-		<property name="functions">
-			<set>
-				<bean class="demo.vmware.function.AggregateField2Function" />
-			</set>
+	<!-- WAN Gateway -->
+	<bean id="RESORT_REPL" class="org.springframework.data.gemfire.RegionFactoryBean"
+		p:cache-ref="cache" p:cacheListeners-ref="cache-logger">
+		<property name="attributes">
+			<bean class="org.springframework.data.gemfire.RegionAttributesFactoryBean"
+				p:enableGateway="true">
+				<property name="partitionAttributes">
+					<bean
+						class="org.springframework.data.gemfire.PartitionAttributesFactoryBean"
+						p:redundant-copies="1" />
+				</property>
+			</bean>
 		</property>
 	</bean>
-
-	<!-- Spring Security -->
-	<security:authentication-manager id="authenticationManager">
-		<security:authentication-provider>
-			<security:user-service>
-				<security:user name="jimi" password="jimispassword"
-					authorities="ROLE_USER, ROLE_ADMIN" />
-				<security:user name="bob" password="bobspassword"
-					authorities="ROLE_USER" />
-			</security:user-service>
-		</security:authentication-provider>
-	</security:authentication-manager>
-
-	<bean class="demo.vmware.security.SpringSecurityAuthenticator"
-		p:manager-ref="authenticationManager" />
-
-	<bean class="demo.vmware.security.RoleBasedAccessControl" />
-
+	
+	<bean id="gtResortRepl" class="org.springframework.data.gemfire.GemfireTemplate"
+		p:region-ref="RESORT_REPL" />
+	
 </beans>

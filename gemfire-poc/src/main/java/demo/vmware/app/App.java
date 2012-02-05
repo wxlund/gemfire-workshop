@@ -15,8 +15,6 @@ import demo.vmware.domain.Dummy;
 public class App
 {
 
-	public static int batchSize = 5000;
-
 	public static void main(String[] args)
 		throws Exception
 	{

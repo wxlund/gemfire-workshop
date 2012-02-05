@@ -27,11 +27,8 @@
 			</list>
 		</property>
 		<property name="properties">
-			<props>
-				<prop key="locators">${locator.host1}[${locator.port1}],${locator.host2}[${locator.port2}]</prop>
-				<prop key="security-client-authenticator">${client-auth}</prop>
-				<prop key="security-client-accessor">${client-accessor}</prop>
-			</props>
+			<value>locators=${locator.host1}[${locator.port1}],${locator.host2}[${locator.port2}]
+			</value>
 		</property>
 	</bean>
 
@@ -146,7 +143,7 @@
 		</property>
 	</bean>
 
-	<!-- Spring Security -->
+	<!-- Spring Security
 	<security:authentication-manager id="authenticationManager">
 		<security:authentication-provider>
 			<security:user-service>
@@ -157,9 +154,5 @@
 			</security:user-service>
 		</security:authentication-provider>
 	</security:authentication-manager>
-
-	<bean class="demo.vmware.security.SpringSecurityAuthenticator"
-		p:manager-ref="authenticationManager" />
-
-	<bean class="demo.vmware.security.RoleBasedAccessControl" />		
+ -->
 </beans>

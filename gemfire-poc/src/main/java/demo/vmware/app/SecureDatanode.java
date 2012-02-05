@@ -12,7 +12,7 @@ import demo.vmware.domain.Resort;
  * Hello world!
  * 
  */
-public class DatanodeWithDB {
+public class SecureDatanode {
 
 	public static void main(String[] args) throws Exception {
 		String resource = "spring-cache-server-withdb.xml";

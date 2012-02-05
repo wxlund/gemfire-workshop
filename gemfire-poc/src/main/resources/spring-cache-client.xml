@@ -19,7 +19,11 @@
 
 	<!-- gemfire.properties file for the cache server -->
 	<util:properties id="props"
-		location="classpath:gemfire-client.properties" local-override="true" />
+		location="classpath:gemfire-client.properties">
+		<prop key="security-client-auth-init">${client-auth-init}</prop>
+		<prop key="security-userName">${userName}</prop>
+		<prop key="security-password">${password}</prop>
+	</util:properties>
 
 	<gfe:client-cache pool-name="client" properties-ref="props"
 		cache-xml-location="classpath:cache-client.xml" />
@@ -40,7 +44,7 @@
 		</gfe:key-interest>
 	</gfe:client-region>
 
-	<!-- Partitioned Region to test expiry -->
+	<!-- Partitioned Region to test expiration -->
 	<bean id="gtDummyExpire" class="org.springframework.data.gemfire.GemfireTemplate"
 		p:region-ref="DUMMY_EXPIRE" />
 	<gfe:client-region id="DUMMY_EXPIRE" pool-name="client">

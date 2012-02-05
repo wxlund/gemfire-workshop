@@ -5,6 +5,7 @@ import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import com.gemstone.gemfire.cache.EntryEvent;
@@ -28,8 +29,12 @@ public class ResortWriteThrough extends CacheWriterAdapter<Object, Object> {
 		logger.info("Before Adding to Cache: " + messageLog(event));
 		this.jdbcTemplate = new JdbcTemplate(dataSource);
 		Resort r = (Resort) event.getNewValue();
-		
-		this.jdbcTemplate.update("insert into resort values(?,?)",r.getId(), r.getName());
+		try {
+			this.jdbcTemplate.update("insert into resort values(?,?)",
+					r.getId(), r.getName());
+		} catch (DuplicateKeyException e) {
+			logger.error("Attempted to insert a duplicate key: " + r.getId());
+		}
 	}
 
 	@Override

@@ -31,6 +31,7 @@ public class DatanodeWithDB {
 		System.out.println();
 		System.out.println("1. Update Resort with DB write-through");
 		System.out.println("2. Insert Resort with DB write-behind");
+		System.out.println("3. Read thru Resort from DB");
 		System.out.print("Your choice:");
 
 	}
@@ -50,6 +51,10 @@ public class DatanodeWithDB {
 				useCase2_Main(mainContext);
 				break;
 			}
+			case 3: {
+				useCase3_Main(mainContext);
+				break;
+			}
 			}
 		}
 	}
@@ -58,7 +63,6 @@ public class DatanodeWithDB {
 			throws Exception {
 		GemfireTemplate gt = (GemfireTemplate) mainContext.getBean("gtResortThru");
 
-		// update dummy
 		Resort r = gt.get("9769f40e0f074b4fb88076eb6ea91c23");
 		r.setName("Disney Land Resort UPDATED");
 		gt.put(r.getId(), r);
@@ -68,7 +72,6 @@ public class DatanodeWithDB {
 			throws Exception {
 		GemfireTemplate gt = (GemfireTemplate) mainContext.getBean("gtResortBehind");
 
-		// update dummy
 		Resort r = new Resort(String.valueOf(System.currentTimeMillis()), "Disney Land Resort NEW");
 		gt.put(r.getId(), r);
 		
@@ -78,6 +81,23 @@ public class DatanodeWithDB {
 		Resort ru = gt.get(r.getId());
 		ru.setName("Disney Land Resort NEW2");
 		gt.put(ru.getId(), ru);
+	}
+	
+	public static void useCase3_Main(ApplicationContext mainContext)
+			throws Exception {
+		GemfireTemplate gt = (GemfireTemplate) mainContext.getBean("gtResortThru");
+
+		//RUN SOME SQL THAT LOOKS LIKE THIS FIRST!
+		//INSERT INTO RESORT ( RESORT_ID , NAME) VALUES ( '1', 'NAME1');
+		String uniqueKey = String.valueOf(System.currentTimeMillis());
+		System.out.println("Waiting for you to execute this SQL. Hit any key then ENTER");
+		System.out.println("INSERT INTO RESORT ( RESORT_ID , NAME) VALUES ( '"+uniqueKey+"', 'NAME1')");
+		
+		Scanner s = new Scanner(System.in);
+		String choice = s.next();
+		
+		Resort r = gt.get(uniqueKey);
+		System.out.println(r);
 	}
 
 }

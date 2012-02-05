@@ -69,6 +69,7 @@
 	<!-- DB WRITE THROUGH REGION  -->
 	<gfe:replicated-region id="RESORT_THRU" cache-ref="cache" name="RESORT_THRU"> 
 		<gfe:cache-listener ref="cache-logger" /> 
+		<gfe:cache-loader ref="resort-cache-loader"/>
 		<gfe:cache-writer ref="resort-cache-writer" /> 
 	</gfe:replicated-region>
 
@@ -77,6 +78,7 @@
 		class="org.springframework.data.gemfire.RegionFactoryBean"
 		p:cache-ref="cache">
 		<property name="cacheListeners" ref="cache-logger" />
+		<property name="cacheLoader" ref="resort-cache-loader"/>
 		<!-- <property name="cacheLoader" ref="cache-loader-resort" /> -->
 		<property name="attributes">
 			<bean class="org.springframework.data.gemfire.RegionAttributesFactoryBean"
@@ -103,6 +105,9 @@
 		<property name="resortItemReader" ref="resortItemReader" />
 		<property name="loadData" value="${load.data.boolean}" />
 	</bean>
+
+	<!-- DATABASE READ THROUGH BEANS -->
+	<bean id="resort-cache-loader" class="demo.vmware.datasync.ResortCacheLoader" /> 
 
 	<!-- DATABASE WRITE THROUGH BEANS -->
 	<bean id="resort-cache-writer" class="demo.vmware.datasync.ResortWriteThrough" /> 

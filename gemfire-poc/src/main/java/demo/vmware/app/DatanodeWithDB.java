@@ -90,7 +90,7 @@ public class DatanodeWithDB {
 		System.out.println("INSERT INTO RESORT ( RESORT_ID , NAME) VALUES ( '"+uniqueKey+"', 'NAME1')");
 		
 		Scanner s = new Scanner(System.in);
-		String choice = s.next();
+		s.next();
 		
 		Resort r = gt.get(uniqueKey);
 		System.out.println(r);

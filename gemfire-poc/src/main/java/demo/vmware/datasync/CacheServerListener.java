@@ -23,7 +23,7 @@ import java.util.Properties;
 /**
  * User: Charlie Black
  */
-public class CacheServerListener implements CacheListener, Declarable {
+public class CacheServerListener implements CacheListener<Object,Object>, Declarable {
 
 
     /**
@@ -36,7 +36,7 @@ public class CacheServerListener implements CacheListener, Declarable {
      * @see com.gemstone.gemfire.cache.Region#put(Object, Object)
      * @see com.gemstone.gemfire.cache.Region#get(Object)
      */
-    public void afterCreate(EntryEvent entryEvent) {
+    public void afterCreate(EntryEvent<Object,Object> entryEvent) {
     }
 
     /**
@@ -47,7 +47,7 @@ public class CacheServerListener implements CacheListener, Declarable {
      * @param event the EntryEvent
      * @see com.gemstone.gemfire.cache.Region#put(Object, Object)
      */
-    public void afterUpdate(EntryEvent entryEvent) {
+    public void afterUpdate(EntryEvent<Object,Object> entryEvent) {
     }
 
     /**
@@ -56,7 +56,7 @@ public class CacheServerListener implements CacheListener, Declarable {
      * @param event the EntryEvent
      * @see com.gemstone.gemfire.cache.Region#invalidate(Object)
      */
-    public void afterInvalidate(EntryEvent entryEvent) {
+    public void afterInvalidate(EntryEvent<Object,Object> entryEvent) {
 
     }
 
@@ -66,7 +66,7 @@ public class CacheServerListener implements CacheListener, Declarable {
      * @param event the EntryEvent
      * @see com.gemstone.gemfire.cache.Region#destroy(Object)
      */
-    public void afterDestroy(EntryEvent entryEvent) {
+    public void afterDestroy(EntryEvent<Object,Object> entryEvent) {
         
     }
 
@@ -80,7 +80,7 @@ public class CacheServerListener implements CacheListener, Declarable {
      * @see com.gemstone.gemfire.cache.Region#invalidateRegion()
      * @see com.gemstone.gemfire.cache.Region#localInvalidateRegion()
      */
-    public void afterRegionInvalidate(RegionEvent regionEvent) {
+    public void afterRegionInvalidate(RegionEvent<Object,Object> regionEvent) {
 
     }
 
@@ -96,7 +96,7 @@ public class CacheServerListener implements CacheListener, Declarable {
      * @see com.gemstone.gemfire.cache.Region#close
      * @see com.gemstone.gemfire.cache.Cache#close()
      */
-    public void afterRegionDestroy(RegionEvent regionEvent) {
+    public void afterRegionDestroy(RegionEvent<Object,Object> regionEvent) {
 
     }
 
@@ -109,7 +109,7 @@ public class CacheServerListener implements CacheListener, Declarable {
      * @see com.gemstone.gemfire.cache.Region#clear
      * @since 5.0
      */
-    public void afterRegionClear(RegionEvent regionEvent) {
+    public void afterRegionClear(RegionEvent<Object,Object> regionEvent) {
 
 
     }
@@ -126,7 +126,7 @@ public class CacheServerListener implements CacheListener, Declarable {
      * @see com.gemstone.gemfire.cache.Region#createSubregion
      * @since 5.0
      */
-    public void afterRegionCreate(RegionEvent regionEvent) {
+    public void afterRegionCreate(RegionEvent<Object,Object> regionEvent) {
 
     }
 
@@ -137,7 +137,7 @@ public class CacheServerListener implements CacheListener, Declarable {
      * @see com.gemstone.gemfire.cache.Cache#readyForEvents
      * @since 5.5
      */
-    public void afterRegionLive(RegionEvent regionEvent) {
+    public void afterRegionLive(RegionEvent<Object,Object> regionEvent) {
 
     }
 
@@ -175,7 +175,7 @@ public class CacheServerListener implements CacheListener, Declarable {
      */
     public void init(Properties props) {
         String value = props.getProperty("someParameter");
-        System.out.println("props.getProperty(\"someParameter\") = " + props.getProperty("someParameter"));
+        System.out.println("props.getProperty(\"someParameter\") = " + value);
     }
 }
 

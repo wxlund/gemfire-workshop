@@ -28,7 +28,6 @@ public class GatewayHubBean
 	private String id;
 	private int port = GatewayHub.DEFAULT_PORT;
 	private String bindAddress = GatewayHub.DEFAULT_BIND_ADDRESS;
-	private String distributionPolicy = GatewayHub.DEFAULT_DISTRIBUTION_POLICY;
 	private boolean manualStart = false;
 	private int maximumTimeBetweenPings = GatewayHub.DEFAULT_MAXIMUM_TIME_BETWEEN_PINGS;
 	private int socketBufferSize = GatewayHub.DEFAULT_SOCKET_BUFFER_SIZE;
@@ -47,7 +46,6 @@ public class GatewayHubBean
 	{
 		hub = cache.addGatewayHub(id, port);
 		hub.setBindAddress(bindAddress);
-		hub.setDistributionPolicy(distributionPolicy);
 		hub.setManualStart(manualStart);
 		hub.setMaximumTimeBetweenPings(maximumTimeBetweenPings);
 		hub.setSocketBufferSize(socketBufferSize);
@@ -68,15 +66,6 @@ public class GatewayHubBean
 	public String getBindAddress()
 	{
 		return bindAddress;
-	}
-
-	/**
-	 * @return
-	 * @see com.gemstone.gemfire.cache.util.GatewayHub#getDistributionPolicy()
-	 */
-	public String getDistributionPolicy()
-	{
-		return distributionPolicy;
 	}
 
 	/**
@@ -140,17 +129,6 @@ public class GatewayHubBean
 	public void setBindAddress(String arg0)
 	{
 		this.bindAddress = arg0;
-	}
-
-	/**
-	 * @param arg0
-	 * @throws GatewayException
-	 * @see com.gemstone.gemfire.cache.util.GatewayHub#setDistributionPolicy(java.lang.String)
-	 */
-	public void setDistributionPolicy(String arg0)
-		throws GatewayException
-	{
-		this.distributionPolicy = arg0;
 	}
 
 	/**

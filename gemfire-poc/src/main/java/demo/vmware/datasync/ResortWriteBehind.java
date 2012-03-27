@@ -58,10 +58,8 @@ public class ResortWriteBehind implements GatewayEventListener, Declarable {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
-	public boolean processEvents(List events) {
-		for (Object e : events) {
-			GatewayEvent ge = (GatewayEvent) e;
+	public boolean processEvents(List<GatewayEvent> events) {
+		for (GatewayEvent ge : events) {
 			process(ge);
 		}
 		return true;

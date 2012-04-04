@@ -10,9 +10,14 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.data.gemfire.GemfireTemplate;
 
+import com.gemstone.gemfire.cache.GemFireCache;
 import com.gemstone.gemfire.cache.execute.Execution;
 import com.gemstone.gemfire.cache.execute.FunctionService;
 import com.gemstone.gemfire.cache.execute.ResultCollector;
+import com.gemstone.gemfire.cache.query.CqAttributesFactory;
+import com.gemstone.gemfire.cache.query.CqEvent;
+import com.gemstone.gemfire.cache.query.CqQuery;
+import com.gemstone.gemfire.cache.util.CqListenerAdapter;
 
 import demo.vmware.dao.DeclarativeCachingDAO;
 import demo.vmware.domain.Dummy;
@@ -43,6 +48,7 @@ public class Client
 		System.out.println("5. Distributed Function");
 		System.out.println("6. Put for expiry");
 		System.out.println("7. Put for eviction");
+		System.out.println("8. Programatic CQ Registration");
 		System.out.print("Your choice:");
 
 	}
@@ -90,6 +96,11 @@ public class Client
 				case 7:
 				{
 					useCase7_Main(mainContext);
+					break;
+				}
+				case 8:
+				{
+					useCase8_Main(mainContext);
 					break;
 				}
 			}
@@ -215,4 +226,31 @@ public class Client
 
 	}
 
+	public static void useCase8_Main(ApplicationContext mainContext)
+		throws Exception
+	{
+
+		GemFireCache cache = (GemFireCache) mainContext
+				.getBean("gemfire-cache");
+		
+		CqAttributesFactory cqaf = new CqAttributesFactory();
+		cqaf.addCqListener(new CqListenerAdapter()
+		{
+			@Override
+			public void onEvent(CqEvent event)
+			{
+				System.out.println("Recieved Event for CQ: " + event.getNewValue());
+			}
+		});
+		
+		CqQuery myCQ = cache.getQueryService().newCq("myCQ", "SELECT * from /DUMMY where field3 != null", 
+				cqaf.create(), true);
+		
+		myCQ.execute();
+		
+		System.out.println("Press enter to close CQ...");
+		System.in.read();
+		
+		myCQ.close();
+	}
 }

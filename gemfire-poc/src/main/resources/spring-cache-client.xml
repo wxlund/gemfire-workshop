@@ -58,6 +58,19 @@
 		<gfe:cache-listener ref="cache-logger" />
 	</gfe:client-region>
 	
+	<!-- COLOCATION -->
+	<gfe:client-region id="LOAN" pool-name="client">
+		<gfe:cache-listener ref="cache-logger" />
+	</gfe:client-region>
+	<bean id="gtLoan" class="org.springframework.data.gemfire.GemfireTemplate"
+		p:region-ref="LOAN" />
+
+	<gfe:client-region id="LOANLINEITEM" pool-name="client">
+		<gfe:cache-listener ref="cache-logger" />
+	</gfe:client-region>
+	<bean id="gtLoanLineItem" class="org.springframework.data.gemfire.GemfireTemplate"
+		p:region-ref="LOANLINEITEM" />
+	
 	<!-- Continuous Query -->
 	<bean id="cqListener" class="demo.vmware.util.CQListener" />
 

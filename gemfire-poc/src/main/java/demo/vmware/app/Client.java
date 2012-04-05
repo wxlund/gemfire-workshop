@@ -1,5 +1,7 @@
 package demo.vmware.app;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Scanner;
@@ -9,6 +11,7 @@ import java.util.UUID;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.data.gemfire.GemfireTemplate;
+import org.springframework.util.StopWatch;
 
 import com.gemstone.gemfire.cache.GemFireCache;
 import com.gemstone.gemfire.cache.execute.Execution;
@@ -17,11 +20,16 @@ import com.gemstone.gemfire.cache.execute.ResultCollector;
 import com.gemstone.gemfire.cache.query.CqAttributesFactory;
 import com.gemstone.gemfire.cache.query.CqEvent;
 import com.gemstone.gemfire.cache.query.CqQuery;
+import com.gemstone.gemfire.cache.query.SelectResults;
+import com.gemstone.gemfire.cache.query.Struct;
 import com.gemstone.gemfire.cache.util.CqListenerAdapter;
 
 import demo.vmware.dao.DeclarativeCachingDAO;
 import demo.vmware.domain.Dummy;
+import demo.vmware.domain.Loan;
+import demo.vmware.domain.LoanKey;
 import demo.vmware.function.AggregateField2Function;
+import demo.vmware.function.JoinQuery;
 
 public class Client
 {
@@ -49,6 +57,10 @@ public class Client
 		System.out.println("6. Put for expiry");
 		System.out.println("7. Put for eviction");
 		System.out.println("8. Programatic CQ Registration");
+		System.out
+				.println("9. Manual join vs. Distributed Function Join on all data");
+		System.out
+				.println("10. Manual join vs. Distributed Function Join on single key");
 		System.out.print("Your choice:");
 
 	}
@@ -101,6 +113,16 @@ public class Client
 				case 8:
 				{
 					useCase8_Main(mainContext);
+					break;
+				}
+				case 9:
+				{
+					useCase9_Main(mainContext);
+					break;
+				}
+				case 10:
+				{
+					useCase10_Main(mainContext);
 					break;
 				}
 			}
@@ -232,25 +254,131 @@ public class Client
 
 		GemFireCache cache = (GemFireCache) mainContext
 				.getBean("gemfire-cache");
-		
+
 		CqAttributesFactory cqaf = new CqAttributesFactory();
 		cqaf.addCqListener(new CqListenerAdapter()
 		{
 			@Override
 			public void onEvent(CqEvent event)
 			{
-				System.out.println("Recieved Event for CQ: " + event.getNewValue());
+				System.out.println("Recieved Event for CQ: "
+						+ event.getNewValue());
 			}
 		});
-		
-		CqQuery myCQ = cache.getQueryService().newCq("myCQ", "SELECT * from /DUMMY where field3 != null", 
-				cqaf.create(), true);
-		
+
+		CqQuery myCQ = cache.getQueryService().newCq("myCQ",
+				"SELECT * from /DUMMY where field3 != null", cqaf.create(),
+				true);
+
 		myCQ.execute();
-		
+
 		System.out.println("Press enter to close CQ...");
 		System.in.read();
-		
+
 		myCQ.close();
+	}
+
+	@SuppressWarnings("unchecked")
+	public static void useCase9_Main(ApplicationContext mainContext)
+		throws Exception
+	{
+		GemfireTemplate gtLoan = (GemfireTemplate) mainContext
+				.getBean("gtLoan");
+		GemfireTemplate gtLoanLineItem = (GemfireTemplate) mainContext
+				.getBean("gtLoanLineItem");
+
+		StopWatch timer = new StopWatch();
+
+		List<Object[]> loanAndLineItems = new ArrayList<Object[]>();
+
+		timer.start("Manual Join");
+		SelectResults<Loan> loans = gtLoan.query("SELECT * from /LOAN");
+		for (Loan loan : loans)
+		{
+			List<Object> loanLineItems = gtLoanLineItem.find(
+					"SELECT * from /LOANLINEITEM where loanKey = $1",
+					loan.getCasefileId()).asList();
+			for (Object loanLineItem : loanLineItems)
+			{
+				loanAndLineItems.add(new Object[]
+					{ loan, loanLineItem });
+			}
+		}
+		timer.stop();
+		System.out.println("Got " + loanAndLineItems.size() + " join results.");
+
+		Execution exec = FunctionService
+				.onRegion(gtLoan.getRegion())
+				.withArgs(
+						new String[]
+							{ "SELECT * from /LOAN loan,/LOANLINEITEM loanLineItem where loanLineItem.loanKey = loan.casefileId" });
+
+		List<Struct> functionJoinResults = new ArrayList<Struct>();
+		timer.start("Distributed Function");
+		ResultCollector<?, ?> rc = exec.execute(JoinQuery.ID);
+		Object results = rc.getResult();
+		ArrayList<Object> resultList = (ArrayList<Object>) results;
+		for (int i = 0; i < resultList.size() - 1; i++)
+		{
+			functionJoinResults.addAll((ArrayList<Struct>) resultList.get(0));
+		}
+		timer.stop();
+		System.out.println("Got " + functionJoinResults.size()
+				+ " join results.");
+
+		System.out.println(timer.prettyPrint());
+	}
+
+	@SuppressWarnings("unchecked")
+	public static void useCase10_Main(ApplicationContext mainContext)
+		throws Exception
+	{
+		GemfireTemplate gtLoan = (GemfireTemplate) mainContext
+				.getBean("gtLoan");
+		GemfireTemplate gtLoanLineItem = (GemfireTemplate) mainContext
+				.getBean("gtLoanLineItem");
+
+		StopWatch timer = new StopWatch();
+
+		List<Object[]> loanAndLineItems = new ArrayList<Object[]>();
+
+		timer.start("Manual Join");
+		SelectResults<Loan> loans = gtLoan.find(
+				"SELECT * from /LOAN where casefileId = $1", "YRS18WFU8AQ");
+		Loan loan = loans.asList().get(0);
+		List<Object> loanLineItems = gtLoanLineItem.find(
+				"SELECT * from /LOANLINEITEM where loanKey = $1",
+				loan.getCasefileId()).asList();
+		for (Object loanLineItem : loanLineItems)
+		{
+			loanAndLineItems.add(new Object[]
+				{ loan, loanLineItem });
+		}
+		timer.stop();
+		System.out.println("Got " + loanAndLineItems.size() + " join results.");
+
+		Execution exec = FunctionService
+				.onRegion(gtLoan.getRegion())
+				.withArgs(
+						new String[]
+							{
+									"SELECT * from /LOAN loan,/LOANLINEITEM loanLineItem where loan.casefileId = $1 AND loanLineItem.loanKey = loan.casefileId",
+									"YRS18WFU8AQ" })
+				.withFilter(new HashSet<LoanKey>(Arrays.asList(new LoanKey("YRS18WFU8AQ"))));
+
+		List<Struct> functionJoinResults = new ArrayList<Struct>();
+		timer.start("Distributed Function");
+		ResultCollector<?, ?> rc = exec.execute(JoinQuery.ID);
+		Object results = rc.getResult();
+		ArrayList<Object> resultList = (ArrayList<Object>) results;
+		for (int i = 0; i < resultList.size() - 1; i++)
+		{
+			functionJoinResults.addAll((ArrayList<Struct>) resultList.get(0));
+		}
+		timer.stop();
+		System.out.println("Got " + functionJoinResults.size()
+				+ " join results.");
+
+		System.out.println(timer.prettyPrint());
 	}
 }

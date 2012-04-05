@@ -6,18 +6,28 @@ import org.springframework.batch.item.ExecutionContext;
 import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.data.gemfire.GemfireTemplate;
 
+import demo.vmware.domain.Loan;
+import demo.vmware.domain.LoanItemKey;
+import demo.vmware.domain.LoanKey;
+import demo.vmware.domain.LoanLineItem;
 import demo.vmware.domain.Resort;
 
 public class InjectorBean
 {
 
-	GemfireTemplate gtResort;
+	private GemfireTemplate gtResort;
 
-	String dataFile;
+	private GemfireTemplate gtLoan;
 
-	Boolean loadData;
+	private GemfireTemplate gtLoanLineItem;
 
-	FlatFileItemReader<Resort> resortItemReader;
+	private Boolean loadData;
+
+	private FlatFileItemReader<Resort> resortItemReader;
+
+	private FlatFileItemReader<Loan> loanItemReader;
+
+	private FlatFileItemReader<LoanLineItem> loanLineItemReader;
 
 	private static final Logger logger = LoggerFactory
 			.getLogger(InjectorBean.class);
@@ -29,6 +39,8 @@ public class InjectorBean
 		{
 			long start = System.currentTimeMillis();
 			loadResorts();
+			loadLoans();
+			loadLoanLineItems();
 
 			long stop = System.currentTimeMillis();
 
@@ -49,6 +61,33 @@ public class InjectorBean
 		}
 	}
 
+	private void loadLoans()
+		throws Exception
+	{
+		loanItemReader.open(new ExecutionContext());
+		Loan loan = loanItemReader.read();
+
+		while (loan != null)
+		{
+			gtLoan.put(new LoanKey(loan.getCasefileId()), loan);
+			loan = loanItemReader.read();
+		}
+	}
+
+	private void loadLoanLineItems()
+		throws Exception
+	{
+		loanLineItemReader.open(new ExecutionContext());
+		LoanLineItem loanLineItem = loanLineItemReader.read();
+
+		while (loanLineItem != null)
+		{
+			gtLoanLineItem.put(new LoanItemKey(loanLineItem.getLoanKey(),
+					loanLineItem.getLineItemId()), loanLineItem);
+			loanLineItem = loanLineItemReader.read();
+		}
+	}
+
 	public Boolean getLoadData()
 	{
 		return loadData;
@@ -64,8 +103,7 @@ public class InjectorBean
 		return resortItemReader;
 	}
 
-	public void setResortItemReader(
-			FlatFileItemReader<Resort> resortItemReader)
+	public void setResortItemReader(FlatFileItemReader<Resort> resortItemReader)
 	{
 		this.resortItemReader = resortItemReader;
 	}
@@ -78,6 +116,47 @@ public class InjectorBean
 	public void setGtResort(GemfireTemplate gtResort)
 	{
 		this.gtResort = gtResort;
+	}
+
+	public FlatFileItemReader<Loan> getLoanItemReader()
+	{
+		return loanItemReader;
+	}
+
+	public void setLoanItemReader(FlatFileItemReader<Loan> loanItemReader)
+	{
+		this.loanItemReader = loanItemReader;
+	}
+
+	public FlatFileItemReader<LoanLineItem> getLoanLineItemReader()
+	{
+		return loanLineItemReader;
+	}
+
+	public void setLoanLineItemReader(
+			FlatFileItemReader<LoanLineItem> loanLineItemReader)
+	{
+		this.loanLineItemReader = loanLineItemReader;
+	}
+
+	public GemfireTemplate getGtLoan()
+	{
+		return gtLoan;
+	}
+
+	public void setGtLoan(GemfireTemplate gtLoan)
+	{
+		this.gtLoan = gtLoan;
+	}
+
+	public GemfireTemplate getGtLoanLineItem()
+	{
+		return gtLoanLineItem;
+	}
+
+	public void setGtLoanLineItem(GemfireTemplate gtLoanLineItem)
+	{
+		this.gtLoanLineItem = gtLoanLineItem;
 	}
 
 }

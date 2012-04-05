@@ -102,13 +102,30 @@
 	<bean id="gtResort" class="org.springframework.data.gemfire.GemfireTemplate"
 		p:region-ref="RESORT" />
 
-	<!-- RESORT INJECTOR BEAN -->
+	<!-- DATA INJECTOR BEAN -->
 	<bean id="InjectorBean" class="demo.vmware.etl.InjectorBean"
 		init-method="loadData">
 		<property name="gtResort" ref="gtResort" />
 		<property name="resortItemReader" ref="resortItemReader" />
+		<property name="gtLoan" ref="gtLoan" />
+		<property name="loanItemReader" ref="loanItemReader" />
+		<property name="gtLoanLineItem" ref="gtLoanLineItem" />
+		<property name="loanLineItemReader" ref="loanLineItemReader" />
 		<property name="loadData" value="${load.data.boolean}" />
 	</bean>
+
+	<!-- COLOCATION -->
+	<gfe:partitioned-region id="LOAN" copies="1" cache-ref="cache">
+		<gfe:cache-writer ref="dummy-cache-writer" />
+	</gfe:partitioned-region>
+	<bean id="gtLoan" class="org.springframework.data.gemfire.GemfireTemplate"
+		p:region-ref="LOAN" />
+
+	<gfe:partitioned-region id="LOANLINEITEM" copies="1" cache-ref="cache" colocated-with="LOAN">
+		<gfe:cache-writer ref="dummy-cache-writer" />
+	</gfe:partitioned-region>
+	<bean id="gtLoanLineItem" class="org.springframework.data.gemfire.GemfireTemplate"
+		p:region-ref="LOANLINEITEM" />
 
 	<!-- DATABASE WRITE THROUGH BEANS -->
 	<bean id="dummy-cache-writer" class="demo.vmware.datasync.DummyCacheWriter" />
@@ -139,11 +156,52 @@
 		<property name="linesToSkip" value="1" />
 	</bean>
 
+	<bean id="loanItemReader" class="org.springframework.batch.item.file.FlatFileItemReader">
+		<property name="resource" value="classpath:/data/LOAN.csv" />
+		<property name="lineMapper">
+			<bean class="org.springframework.batch.item.file.mapping.DefaultLineMapper">
+				<property name="lineTokenizer">
+					<bean
+						class="org.springframework.batch.item.file.transform.DelimitedLineTokenizer">
+						<property name="quoteCharacter" value="&quot;" />
+						<property name="names" value="casefileId,lenderLoanNumber,borrowerLastName,executionType,remittanceType,servicing,rateLockExpirationDate,noteRate,loanAmount,submittedCommitmentExpirationDate,passThrough,passThroughPrice,netSRP,passThroughPriceNetSRP,product,userId" />
+					</bean>
+				</property>
+				<property name="fieldSetMapper">
+						<bean class="org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper"
+							p:targetType="demo.vmware.domain.Loan" />
+				</property>
+			</bean>
+		</property>
+		<property name="linesToSkip" value="1" />
+	</bean>
+
+	<bean id="loanLineItemReader" class="org.springframework.batch.item.file.FlatFileItemReader">
+		<property name="resource" value="classpath:/data/LOANITEM.csv" />
+		<property name="lineMapper">
+			<bean class="org.springframework.batch.item.file.mapping.DefaultLineMapper">
+				<property name="lineTokenizer">
+					<bean
+						class="org.springframework.batch.item.file.transform.DelimitedLineTokenizer">
+						<property name="quoteCharacter" value="&quot;" />
+						<property name="names" value="loanKey,lineItemId,paymentDate,amount" />
+					</bean>
+				</property>
+				<property name="fieldSetMapper">
+						<bean class="org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper"
+							p:targetType="demo.vmware.domain.LoanLineItem" />
+				</property>
+			</bean>
+		</property>
+		<property name="linesToSkip" value="1" />
+	</bean>
+
 	<!-- Bean to register functions for execution -->
 	<bean id="functionRegistrar" class="demo.vmware.util.FunctionRegistrar">
 		<property name="functions">
 			<set>
 				<bean class="demo.vmware.function.AggregateField2Function" />
+				<bean class="demo.vmware.function.JoinQuery" />
 			</set>
 		</property>
 	</bean>

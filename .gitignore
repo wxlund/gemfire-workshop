@@ -3,3 +3,6 @@ target
 locator
 *.db
 vf.gf.*
+.classpath
+.project
+.settings

@@ -9,11 +9,11 @@
     <context:property-placeholder system-properties-mode="OVERRIDE" location="classpath:/common.properties" />
 
     <!-- create a unique directory base directory for this node -->
-    <bean id="findDiskDir" class="demo.vmware.util.PersistenceDirectoryGenerator" destroy-method="unlock" init-method="findDirectory">
+    <bean id="findDiskDir" class="demo.pivotal.util.PersistenceDirectoryGenerator" destroy-method="unlock" init-method="findDirectory">
         <property name="parent" value="${data.location}/locator" />
     </bean>
 
-    <bean id="locator" class="demo.vmware.util.LocatorBean" init-method="startLocator" destroy-method="stopLocator">
+    <bean id="locator" class="demo.pivotal.util.LocatorBean" init-method="startLocator" destroy-method="stopLocator">
         <property name="port1" value="${locator.port1}" />
         <property name="port2" value="${locator.port2}" />
         <property name="throwOnBindFailure" value="false" />

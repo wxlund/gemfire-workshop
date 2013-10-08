@@ -10,8 +10,8 @@
         http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd
         http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-3.1.xsd">
 
-	<context:component-scan base-package="demo.vmware.dao" />
-	<context:component-scan base-package="demo.vmware.datasync" />
+	<context:component-scan base-package="demo.pivotal.dao" />
+	<context:component-scan base-package="demo.pivotal.datasync" />
 
 	<!-- Generic properties that we can set, such as where to store data and 
 		log files -->
@@ -38,28 +38,28 @@
 
 	<!-- when we run multiple cache servers on the same node, we need unique 
 		server ports -->
-	<bean id="portGenerator" class="demo.vmware.util.ServerPortGenerator" />
+	<bean id="portGenerator" class="demo.pivotal.util.ServerPortGenerator" />
 
 	<!-- create a unique directory base directory for this node -->
-	<bean id="findDiskDir" class="demo.vmware.util.PersistenceDirectoryGenerator"
+	<bean id="findDiskDir" class="demo.pivotal.util.PersistenceDirectoryGenerator"
 		destroy-method="unlock" init-method="findDirectory">
 		<property name="parent" value="${data.location}" />
 	</bean>
 
-	<bean id="cache-logger" class="demo.vmware.util.CacheLogger" />
+	<bean id="cache-logger" class="demo.pivotal.util.CacheLogger" />
 
 	<!-- gemfire base cache configuration -->
 	<gfe:cache id="cache" properties-ref="props"
 		cache-xml-location="classpath:cache-server.xml" />
 		
 	<!-- WAN -->
-	<bean id="gatewayHub" class="demo.vmware.datasync.GatewayHubBean"
+	<bean id="gatewayHub" class="demo.pivotal.datasync.GatewayHubBean"
 		p:id="${wan.site}" p:port="${wan.port}" p:cache-ref="cache">
 		<property name="gateways">
 			<list>
-				<bean class="demo.vmware.datasync.GatewayBean" p:id="${wan.remote.id}" p:attribs-ref="gatewayQueueAttributes">
+				<bean class="demo.pivotal.datasync.GatewayBean" p:id="${wan.remote.id}" p:attribs-ref="gatewayQueueAttributes">
 					<property name="endpoints">
-						<bean class="demo.vmware.datasync.GatewayEndpointBean"
+						<bean class="demo.pivotal.datasync.GatewayEndpointBean"
 							p:id="${wan.remote.id}-${wan.remote.host}" p:host="${wan.remote.host}"
 							p:port="${wan.remote.port}" />
 					</property>
@@ -72,7 +72,7 @@
 	<gfe:cache-server id="advanced-config" auto-startup="true"
 		cache-ref="cache" port="#{portGenerator.generatePort()}" />
 
-	<bean id="diskStore" class="demo.vmware.util.GemfireDiskStore"
+	<bean id="diskStore" class="demo.pivotal.util.GemfireDiskStore"
 		init-method="init">
 		<property name="cache" ref="cache" />
 		<property name="baseDir" value="#{findDiskDir.getSelected()}" />
@@ -103,7 +103,7 @@
 		p:region-ref="RESORT" />
 
 	<!-- RESORT INJECTOR BEAN -->
-	<bean id="InjectorBean" class="demo.vmware.etl.InjectorBean"
+	<bean id="InjectorBean" class="demo.pivotal.etl.InjectorBean"
 		init-method="loadData">
 		<property name="gtResort" ref="gtResort" />
 		<property name="resortItemReader" ref="resortItemReader" />
@@ -111,7 +111,7 @@
 	</bean>
 
 	<!-- DATABASE WRITE THROUGH BEANS -->
-	<bean id="dummy-cache-writer" class="demo.vmware.datasync.DummyCacheWriter" />
+	<bean id="dummy-cache-writer" class="demo.pivotal.datasync.DummyCacheWriter" />
 
 	<!-- SPRING BATCH STUFF -->
 	<bean id="resortItemReader" class="org.springframework.batch.item.file.FlatFileItemReader">
@@ -126,7 +126,7 @@
 					</bean>
 				</property>
 				<property name="fieldSetMapper">
-					<bean class="demo.vmware.etl.ResortMapper" />
+					<bean class="demo.pivotal.etl.ResortMapper" />
 				</property>
 			</bean>
 		</property>

@@ -10,8 +10,8 @@
         http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd
         http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-3.1.xsd">
 
-	<context:component-scan base-package="demo.vmware.dao" />
-	<context:component-scan base-package="demo.vmware.datasync" />
+	<context:component-scan base-package="demo.pivotal.dao" />
+	<context:component-scan base-package="demo.pivotal.datasync" />
 
 	<!-- Generic properties that we can set, such as where to store data and 
 		log files -->
@@ -38,15 +38,15 @@
 
 	<!-- when we run multiple cache servers on the same node, we need unique 
 		server ports -->
-	<bean id="portGenerator" class="demo.vmware.util.ServerPortGenerator" />
+	<bean id="portGenerator" class="demo.pivotal.util.ServerPortGenerator" />
 
 	<!-- create a unique directory base directory for this node -->
-	<bean id="findDiskDir" class="demo.vmware.util.PersistenceDirectoryGenerator"
+	<bean id="findDiskDir" class="demo.pivotal.util.PersistenceDirectoryGenerator"
 		destroy-method="unlock" init-method="findDirectory">
 		<property name="parent" value="${data.location}" />
 	</bean>
 
-	<bean id="cache-logger" class="demo.vmware.util.CacheLogger" />
+	<bean id="cache-logger" class="demo.pivotal.util.CacheLogger" />
 
 	<!-- gemfire base cache configuration -->
 	<gfe:cache id="cache" properties-ref="props"
@@ -56,7 +56,7 @@
 	<gfe:cache-server id="advanced-config" auto-startup="true"
 		cache-ref="cache" port="#{portGenerator.generatePort()}" />
 
-	<bean id="diskStore" class="demo.vmware.util.GemfireDiskStore"
+	<bean id="diskStore" class="demo.pivotal.util.GemfireDiskStore"
 		init-method="init">
 		<property name="cache" ref="cache" />
 		<property name="baseDir" value="#{findDiskDir.getSelected()}" />
@@ -103,7 +103,7 @@
 		p:region-ref="RESORT" />
 
 	<!-- DATA INJECTOR BEAN -->
-	<bean id="InjectorBean" class="demo.vmware.etl.InjectorBean"
+	<bean id="InjectorBean" class="demo.pivotal.etl.InjectorBean"
 		init-method="loadData">
 		<property name="gtResort" ref="gtResort" />
 		<property name="resortItemReader" ref="resortItemReader" />
@@ -128,7 +128,7 @@
 		p:region-ref="LOANLINEITEM" />
 
 	<!-- DATABASE WRITE THROUGH BEANS -->
-	<bean id="dummy-cache-writer" class="demo.vmware.datasync.DummyCacheWriter" />
+	<bean id="dummy-cache-writer" class="demo.pivotal.datasync.DummyCacheWriter" />
 
 	<!-- <bean class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close" 
 		id="dataSource"> <property name="driverClassName" value="${database.driverClassName}"/> 
@@ -149,7 +149,7 @@
 					</bean>
 				</property>
 				<property name="fieldSetMapper">
-					<bean class="demo.vmware.etl.ResortMapper" />
+					<bean class="demo.pivotal.etl.ResortMapper" />
 				</property>
 			</bean>
 		</property>
@@ -169,7 +169,7 @@
 				</property>
 				<property name="fieldSetMapper">
 						<bean class="org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper"
-							p:targetType="demo.vmware.domain.Loan" />
+							p:targetType="demo.pivotal.domain.Loan" />
 				</property>
 			</bean>
 		</property>
@@ -189,7 +189,7 @@
 				</property>
 				<property name="fieldSetMapper">
 						<bean class="org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper"
-							p:targetType="demo.vmware.domain.LoanLineItem" />
+							p:targetType="demo.pivotal.domain.LoanLineItem" />
 				</property>
 			</bean>
 		</property>
@@ -197,11 +197,11 @@
 	</bean>
 
 	<!-- Bean to register functions for execution -->
-	<bean id="functionRegistrar" class="demo.vmware.util.FunctionRegistrar">
+	<bean id="functionRegistrar" class="demo.pivotal.util.FunctionRegistrar">
 		<property name="functions">
 			<set>
-				<bean class="demo.vmware.function.AggregateField2Function" />
-				<bean class="demo.vmware.function.JoinQuery" />
+				<bean class="demo.pivotal.function.AggregateField2Function" />
+				<bean class="demo.pivotal.function.JoinQuery" />
 			</set>
 		</property>
 	</bean>
@@ -218,9 +218,9 @@
 		</security:authentication-provider>
 	</security:authentication-manager>
 
-	<bean class="demo.vmware.security.SpringSecurityAuthenticator"
+	<bean class="demo.pivotal.security.SpringSecurityAuthenticator"
 		p:manager-ref="authenticationManager" />
 
-	<bean class="demo.vmware.security.RoleBasedAccessControl" />
+	<bean class="demo.pivotal.security.RoleBasedAccessControl" />
 
 </beans>

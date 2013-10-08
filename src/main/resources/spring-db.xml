@@ -19,7 +19,7 @@
 		<constructor-arg value="-web,-webPort,8082" />
 	</bean>
 	
-	<bean id="demo.vmware.util.H2RunScriptUtil" class="demo.vmware.util.H2RunScriptUtil" init-method="run" >
+	<bean id="demo.pivotal.util.H2RunScriptUtil" class="demo.pivotal.util.H2RunScriptUtil" init-method="run" >
 		<constructor-arg value="-url,jdbc:h2:tcp://localhost:8043/griddb,-user,sa,-script,classpath:/SQL/create.sql, -continueOnError, -showResults"/>
 	</bean>
 		

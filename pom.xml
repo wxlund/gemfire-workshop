@@ -1,7 +1,10 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>demo.vmware</groupId>
+	<groupId>demo.pivotal</groupId>
+	<artifactId>gemfire-poc</artifactId>
+	<name>gemfire-poc</name>
+	<version>1.1.0</version>
 	<packaging>war</packaging>
 	<properties>
 		<java-version>1.6</java-version>
@@ -9,8 +12,6 @@
 		<spring.integration.version>2.1.0.RC1</spring.integration.version>
 		<spring.version>3.1.0.RELEASE</spring.version>
 	</properties>
-	<version>1.0.0</version>
-	<url>http://maven.apache.org</url>
 	<dependencies>
 		<dependency>
 			<groupId>gfmon</groupId>
@@ -312,7 +313,6 @@
 			<name>Spring Framework Maven Milestone Repository</name>
 			<url>http://maven.springframework.org/milestone</url>
 		</repository>
-
 		<repository>
 			<id>project</id>
 			<name>Project Maven Repository</name>
@@ -331,6 +331,4 @@
 			<url>http://repo1.maven.org/maven2/</url>
 		</pluginRepository>
 	</pluginRepositories>
-	<artifactId>gemfire-poc</artifactId>
-	<name>gemfire-poc</name>
 </project>

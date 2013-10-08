@@ -15,7 +15,7 @@ import demo.pivotal.domain.Resort;
 public class SecureDatanode {
 
 	public static void main(String[] args) throws Exception {
-		String resource = "spring-cache-server-withdb.xml";
+		String resource = "spring-secure-cache-server.xml";
 		ClassPathXmlApplicationContext mainContext = new ClassPathXmlApplicationContext(
 				new String[] { resource }, false);
 		mainContext.setValidating(true);

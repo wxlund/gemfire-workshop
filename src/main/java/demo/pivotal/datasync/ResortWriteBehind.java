@@ -5,7 +5,8 @@ import java.util.Properties;
 
 import javax.sql.DataSource;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 
@@ -18,7 +19,7 @@ import demo.pivotal.domain.Resort;
 
 public class ResortWriteBehind implements GatewayEventListener, Declarable {
 
-	private static Logger logger = Logger.getLogger(ResortWriteBehind.class);
+	private static Logger logger = LoggerFactory.getLogger(ResortWriteBehind.class);
 
 	private JdbcTemplate jdbcTemplate;
 

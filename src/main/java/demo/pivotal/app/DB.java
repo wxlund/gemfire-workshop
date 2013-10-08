@@ -8,12 +8,18 @@ public class DB {
      * @param args
      */
     public static void main(String[] args) throws Exception {
-        String resource = ("spring-db.xml");
-        ClassPathXmlApplicationContext mainContext = new ClassPathXmlApplicationContext(new String[] {resource}, false);
+        ClassPathXmlApplicationContext mainContext = new ClassPathXmlApplicationContext(new String[] {"spring-db.xml"}, false);
         mainContext.setValidating(true);
         mainContext.refresh();
 
-        Thread.sleep(Long.MAX_VALUE);
+        try
+		{
+			Thread.sleep(Long.MAX_VALUE);
+		}
+		finally
+		{
+			mainContext.close();
+		}
     }
 
 }

@@ -3,10 +3,11 @@
  */
 package demo.pivotal.function;
 
+import java.util.Arrays;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.gemstone.bp.edu.emory.mathcs.backport.java.util.Arrays;
 import com.gemstone.gemfire.cache.Region;
 import com.gemstone.gemfire.cache.execute.FunctionAdapter;
 import com.gemstone.gemfire.cache.execute.FunctionContext;
@@ -68,13 +69,17 @@ public class JoinQuery
 				SelectResults<Struct> results;
 				if (params != null && params.length != 0)
 				{
-					log.trace(String.format("Executing JoinQuery function with query (%s) and parameters %s", queryStr, Arrays.deepToString(params)));
+					log.trace(String
+							.format("Executing JoinQuery function with query (%s) and parameters %s",
+									queryStr, Arrays.deepToString(params)));
 
 					results = (SelectResults<Struct>) query.execute(rc, params);
 				}
 				else
 				{
-					log.trace(String.format("Executing JoinQuery function with query (%s)", queryStr));
+					log.trace(String.format(
+							"Executing JoinQuery function with query (%s)",
+							queryStr));
 					results = (SelectResults<Struct>) query.execute(rc);
 				}
 

@@ -5,10 +5,10 @@
 	xmlns:util="http://www.springframework.org/schema/util" xmlns:p="http://www.springframework.org/schema/p"
 	xmlns:security="http://www.springframework.org/schema/security"
 	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
-        http://www.springframework.org/schema/gemfire http://www.springframework.org/schema/gemfire/spring-gemfire-1.1.xsd
+        http://www.springframework.org/schema/gemfire http://www.springframework.org/schema/gemfire/spring-gemfire.xsd
         http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd
-        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd
-        http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-3.1.xsd">
+        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security.xsd">
 
 	<context:component-scan base-package="demo.pivotal.dao" />
 	<context:component-scan base-package="demo.pivotal.datasync" />
@@ -59,7 +59,7 @@
 	<bean id="diskStore" class="demo.pivotal.util.GemfireDiskStore"
 		init-method="init">
 		<property name="cache" ref="cache" />
-		<property name="baseDir" value="#{findDiskDir.getSelected()}" />
+		<property name="baseDir" value="#{findDiskDir.getSelected().getAbsolutePath()}" />
 		<property name="diskStoreName" value="default" />
 	</bean>
 
@@ -82,20 +82,21 @@
 	</gfe:replicated-region>
 
 	<gfe:partitioned-region id="DUMMY_EXPIRE"
-		copies="1" name="DUMMY_EXPIRE" cache-ref="cache">
-		<gfe:cache-writer ref="dummy-cache-writer" />
+		copies="1" cache-ref="cache">
 		<gfe:entry-ttl timeout="1" action="DESTROY" />
+		<gfe:cache-writer ref="dummy-cache-writer" />
 	</gfe:partitioned-region>
 
 	<gfe:partitioned-region id="DUMMY_EVICT" copies="1"
-		name="DUMMY_EVICT" cache-ref="cache">
-		<gfe:disk-store max-oplog-size="10">
-			<gfe:disk-dir location="#{findDiskDir.getSelected()}"
-				max-size="10" />
-		</gfe:disk-store>
+		name="DUMMY_EVICT" cache-ref="cache" disk-store-ref="localStore">
 		<gfe:cache-writer ref="dummy-cache-writer" />
 		<gfe:eviction threshold="2" type="ENTRY_COUNT" action="OVERFLOW_TO_DISK" />
 	</gfe:partitioned-region>
+
+	<gfe:disk-store id="localStore" max-oplog-size="10" cache-ref="cache">
+		<gfe:disk-dir location="#{findDiskDir.getSelected().getAbsolutePath()}"
+			max-size="10" />
+	</gfe:disk-store>
 
 	<bean id="gtDummy" class="org.springframework.data.gemfire.GemfireTemplate"
 		p:region-ref="DUMMY" />
@@ -129,12 +130,6 @@
 
 	<!-- DATABASE WRITE THROUGH BEANS -->
 	<bean id="dummy-cache-writer" class="demo.pivotal.datasync.DummyCacheWriter" />
-
-	<!-- <bean class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close" 
-		id="dataSource"> <property name="driverClassName" value="${database.driverClassName}"/> 
-		<property name="url" value="${database.url}"/> <property name="username" 
-		value="${database.username}"/> <property name="password" value="${database.password}"/> 
-		</bean> -->
 
 	<!-- SPRING BATCH STUFF -->
 	<bean id="resortItemReader" class="org.springframework.batch.item.file.FlatFileItemReader">
@@ -205,22 +200,5 @@
 			</set>
 		</property>
 	</bean>
-
-	<!-- Spring Security -->
-	<security:authentication-manager id="authenticationManager">
-		<security:authentication-provider>
-			<security:user-service>
-				<security:user name="jimi" password="jimispassword"
-					authorities="ROLE_USER, ROLE_ADMIN" />
-				<security:user name="bob" password="bobspassword"
-					authorities="ROLE_USER" />
-			</security:user-service>
-		</security:authentication-provider>
-	</security:authentication-manager>
-
-	<bean class="demo.pivotal.security.SpringSecurityAuthenticator"
-		p:manager-ref="authenticationManager" />
-
-	<bean class="demo.pivotal.security.RoleBasedAccessControl" />
 
 </beans>

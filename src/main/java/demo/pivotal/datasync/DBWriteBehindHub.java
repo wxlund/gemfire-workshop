@@ -2,7 +2,8 @@ package demo.pivotal.datasync;
 
 import java.io.IOException;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.gemstone.gemfire.cache.Cache;
@@ -16,7 +17,7 @@ public class DBWriteBehindHub {
 	Cache cache;
 	GatewayEventListener[] listeners;
 
-	static Logger logger = Logger.getLogger(DBWriteBehindHub.class);
+	static Logger logger = LoggerFactory.getLogger(DBWriteBehindHub.class);
 	
 	public DBWriteBehindHub(GatewayEventListener[] listeners)
 	{

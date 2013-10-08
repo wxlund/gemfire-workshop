@@ -12,16 +12,15 @@ import demo.pivotal.domain.Dummy;
  * Hello world!
  * 
  */
-public class App
+public class Datanode
 {
 
 	public static void main(String[] args)
 		throws Exception
 	{
-		String resource = "spring-cache-server.xml";
 		ClassPathXmlApplicationContext mainContext = new ClassPathXmlApplicationContext(
 				new String[]
-					{ resource }, false);
+					{ "spring-cache-server.xml" }, false);
 		mainContext.setValidating(true);
 		mainContext.refresh();
 		userMenu(mainContext);

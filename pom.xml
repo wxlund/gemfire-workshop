@@ -6,154 +6,90 @@
 	<name>gemfire-poc</name>
 	<version>1.1.0</version>
 	<packaging>war</packaging>
+	<url>http://maven.apache.org</url>
+	<developers>
+		<developer>
+			<id>cdelashmutt-pivotal</id>
+			<name>Chris DeLashmutt</name>
+			<email>cdelashmut@gopivotal.com</email>
+			<organization>Pivotal, Inc.</organization>
+			<organizationUrl>http://www.gopivotal.com</organizationUrl>
+			<timezone>UTC-5</timezone>
+		</developer>
+	</developers>
+	<scm>
+		<developerConnection>https://github.com/cdelashmutt-pivotal/gemfire-workshop.git</developerConnection>
+		<connection>https://github.com/cdelashmutt-pivotal/gemfire-workshop</connection>
+		<url>https://github.com/cdelashmutt-pivotal/gemfire-workshop</url>
+	</scm>
 	<properties>
 		<java-version>1.6</java-version>
-		<org.slf4j-version>1.6.4</org.slf4j-version>
-		<spring.integration.version>2.1.0.RC1</spring.integration.version>
-		<spring.version>3.1.0.RELEASE</spring.version>
+		<org.slf4j-version>1.7.5</org.slf4j-version>
+		<spring.version>3.2.4.RELEASE</spring.version>
+		<spring.security.version>3.1.4.RELEASE</spring.security.version>
+		<spring.batch.version>2.2.2.RELEASE</spring.batch.version>
 	</properties>
 	<dependencies>
-		<dependency>
-			<groupId>gfmon</groupId>
-			<artifactId>commons-modeler</artifactId>
-			<version>6.6</version>
-			<type>jar</type>
-			<scope>compile</scope>
-		</dependency>
-		<dependency>
-			<groupId>gfmon</groupId>
-			<artifactId>mail</artifactId>
-			<version>6.6</version>
-			<type>jar</type>
-			<scope>compile</scope>
-		</dependency>
-
-		<!-- <dependency> <groupId>gfmon</groupId> <artifactId>activation</artifactId> 
-			<version>6.6</version> <type>jar</type> <scope>compile</scope> </dependency> 
-			<dependency> <groupId>gfmon</groupId> <artifactId>commons-logging</artifactId> 
-			<version>6.6</version> <type>jar</type> <scope>compile</scope> </dependency> -->
-		<dependency>
-			<groupId>gfmon</groupId>
-			<artifactId>mx4j</artifactId>
-			<version>6.6</version>
-			<type>jar</type>
-			<scope>compile</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>gfmon</groupId>
-			<artifactId>mx4j-tools</artifactId>
-			<version>6.6</version>
-			<type>jar</type>
-			<scope>compile</scope>
-		</dependency>
-		<!-- <dependency> <groupId>gfsh</groupId> <artifactId>antlr</artifactId> 
-			<version>6.6</version> <type>jar</type> <scope>compile</scope> </dependency> -->
-		<dependency>
-			<groupId>gfsh</groupId>
-			<artifactId>gfsh</artifactId>
-			<version>6.6.2</version>
-			<type>jar</type>
-			<scope>compile</scope>
-		</dependency>
-		<dependency>
-			<groupId>gfsh</groupId>
-			<artifactId>jline</artifactId>
-			<version>6.6</version>
-			<type>jar</type>
-			<scope>compile</scope>
-		</dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-context</artifactId>
 			<version>${spring.version}</version>
-			<type>jar</type>
 			<scope>compile</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>commons-logging</groupId>
+					<artifactId>commons-logging</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>
-			<artifactId>spring-aop</artifactId>
+			<artifactId>spring-jdbc</artifactId>
 			<version>${spring.version}</version>
-			<type>jar</type>
-			<scope>compile</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-beans</artifactId>
-			<version>${spring.version}</version>
-			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-web</artifactId>
 			<version>${spring.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-core</artifactId>
-			<version>${spring.version}</version>
-			<type>jar</type>
-			<scope>compile</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-jdbc</artifactId>
-			<version>${spring.version}</version>
-			<type>jar</type>
-			<scope>compile</scope>
+			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>commons-dbcp</groupId>
 			<artifactId>commons-dbcp</artifactId>
 			<version>1.3</version>
-			<type>jar</type>
-			<scope>compile</scope>
+			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.security</groupId>
 			<artifactId>spring-security-core</artifactId>
-			<version>${spring.version}</version>
+			<version>${spring.security.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.security</groupId>
 			<artifactId>spring-security-config</artifactId>
-			<version>${spring.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.security</groupId>
-			<artifactId>spring-security-web</artifactId>
-			<version>${spring.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.batch</groupId>
-			<artifactId>spring-batch-core</artifactId>
-			<version>2.1.8.RELEASE</version>
+			<version>${spring.security.version}</version>
+			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.batch</groupId>
 			<artifactId>spring-batch-infrastructure</artifactId>
-			<version>2.1.8.RELEASE</version>
+			<version>${spring.batch.version}</version>
 		</dependency>
-
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>3.8.1</version>
-			<scope>test</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>com.gemstone.gemfire</groupId>
-			<artifactId>gemfire</artifactId>
-			<version>6.6.2</version>
-			<scope>compile</scope>
-		</dependency>
-
 		<dependency>
 			<groupId>org.springframework.data</groupId>
 			<artifactId>spring-data-gemfire</artifactId>
-			<version>1.1.1.RELEASE</version>
+			<version>1.3.2.RELEASE</version>
+			<exclusions>
+				<exclusion>
+					<artifactId>commons-logging</artifactId>
+					<groupId>commons-logging</groupId>
+				</exclusion>
+				<exclusion>
+					<artifactId>commons-logging-api</artifactId>
+					<groupId>commons-logging</groupId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
 		<!-- Logging -->
@@ -174,50 +110,13 @@
 			<version>${org.slf4j-version}</version>
 			<scope>runtime</scope>
 		</dependency>
-		<dependency>
-			<groupId>log4j</groupId>
-			<artifactId>log4j</artifactId>
-			<version>1.2.15</version>
-			<exclusions>
-				<exclusion>
-					<groupId>javax.mail</groupId>
-					<artifactId>mail</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>javax.jms</groupId>
-					<artifactId>jms</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>com.sun.jdmk</groupId>
-					<artifactId>jmxtools</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>com.sun.jmx</groupId>
-					<artifactId>jmxri</artifactId>
-				</exclusion>
-			</exclusions>
-			<scope>runtime</scope>
-		</dependency>
 
+		<!-- Database -->
 		<dependency>
 			<groupId>com.h2database</groupId>
 			<artifactId>h2</artifactId>
 			<version>1.3.155</version>
 			<classifier />
-		</dependency>
-		<dependency>
-			<groupId>org.apache.tomcat</groupId>
-			<artifactId>servlet-api</artifactId>
-			<version>6.0.33</version>
-			<scope>provided</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>joda-time</groupId>
-			<artifactId>joda-time</artifactId>
-			<version>2.0</version>
-			<type>jar</type>
-			<scope>compile</scope>
 		</dependency>
 	</dependencies>
 	<build>
@@ -299,36 +198,9 @@
 	</build>
 	<repositories>
 		<repository>
-			<id>gemfire-release-repo</id>
-			<name>GemFire Release Repository</name>
-			<url>http://dist.gemstone.com/maven/release</url>
-		</repository>
-		<repository>
-			<id>maven2</id>
-			<name>Maven2 Central</name>
-			<url>http://repo1.maven.org/maven2/</url>
-		</repository>
-		<repository>
 			<id>repository.springframework.maven.milestone</id>
 			<name>Spring Framework Maven Milestone Repository</name>
 			<url>http://maven.springframework.org/milestone</url>
 		</repository>
-		<repository>
-			<id>project</id>
-			<name>Project Maven Repository</name>
-			<url>file://${basedir}/lib/</url>
-		</repository>
 	</repositories>
-	<pluginRepositories>
-		<pluginRepository>
-			<id>projectPlugins</id>
-			<name>Project Maven Repository</name>
-			<url>file://${basedir}/lib/</url>
-		</pluginRepository>
-		<pluginRepository>
-			<id>maven2</id>
-			<name>Maven2 Central</name>
-			<url>http://repo1.maven.org/maven2/</url>
-		</pluginRepository>
-	</pluginRepositories>
 </project>

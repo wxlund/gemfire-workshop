@@ -10,6 +10,7 @@
         http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
         http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security.xsd">
 
+	<!-- Discovers the DAOs and data loading beans -->
 	<context:component-scan base-package="demo.pivotal.dao" />
 	<context:component-scan base-package="demo.pivotal.datasync" />
 
@@ -46,64 +47,79 @@
 		<property name="parent" value="${data.location}" />
 	</bean>
 
+	<!-- A simple cache listener to log changes to a region's entries. -->
 	<bean id="cache-logger" class="demo.pivotal.util.CacheLogger" />
 
 	<!-- gemfire base cache configuration -->
 	<gfe:cache id="cache" properties-ref="props"
 		cache-xml-location="classpath:cache-server.xml" />
 
-	<!-- this makes the cache server be a 'server' in the grid -->
+	<!-- this makes the cache server become a server that clients can connect 
+		to -->
 	<gfe:cache-server id="advanced-config" auto-startup="true"
 		cache-ref="cache" port="#{portGenerator.generatePort()}" />
 
-	<bean id="diskStore" class="demo.pivotal.util.GemfireDiskStore"
-		init-method="init">
-		<property name="cache" ref="cache" />
-		<property name="baseDir" value="#{findDiskDir.getSelected().getAbsolutePath()}" />
-		<property name="diskStoreName" value="default" />
-	</bean>
-
-	<bean id="gatewayQueueAttributes" class="com.gemstone.gemfire.cache.util.GatewayQueueAttributes">
-		<property name="diskStoreName" value="#{diskStore.getStore().getName()}" />
-		<property name="enablePersistence" value="false" />
-		<property name="batchSize" value="1000" />
-		<property name="maximumQueueMemory" value="32" />
-	</bean>
+	<!-- A persistent disk store to use when storing data for persistence, overflow, 
+		etc. -->
+	<gfe:disk-store id="localStore" max-oplog-size="10"
+		cache-ref="cache">
+		<gfe:disk-dir location="#{findDiskDir.getSelected().getAbsolutePath()}"
+			max-size="10" />
+	</gfe:disk-store>
 
 	<!-- GEMFIRE REGION DEFINITIONS -->
+	<!-- Simple partitioned region for basic examples -->
 	<gfe:partitioned-region id="DUMMY" copies="1"
 		name="DUMMY" cache-ref="cache">
 		<gfe:cache-writer ref="dummy-cache-writer" />
 	</gfe:partitioned-region>
 
+	<!-- Simple replicated region for basic examples -->
 	<gfe:replicated-region id="RESORT" cache-ref="cache"
 		name="RESORT">
 		<gfe:cache-listener ref="cache-logger" />
 	</gfe:replicated-region>
 
+	<!-- Region with Expiry -->
 	<gfe:partitioned-region id="DUMMY_EXPIRE"
 		copies="1" cache-ref="cache">
 		<gfe:entry-ttl timeout="1" action="DESTROY" />
 		<gfe:cache-writer ref="dummy-cache-writer" />
 	</gfe:partitioned-region>
 
+	<!-- Region with eviction -->
 	<gfe:partitioned-region id="DUMMY_EVICT" copies="1"
 		name="DUMMY_EVICT" cache-ref="cache" disk-store-ref="localStore">
 		<gfe:cache-writer ref="dummy-cache-writer" />
 		<gfe:eviction threshold="2" type="ENTRY_COUNT" action="OVERFLOW_TO_DISK" />
 	</gfe:partitioned-region>
 
-	<gfe:disk-store id="localStore" max-oplog-size="10" cache-ref="cache">
-		<gfe:disk-dir location="#{findDiskDir.getSelected().getAbsolutePath()}"
-			max-size="10" />
-	</gfe:disk-store>
+	<!-- Regions for colocation examples -->
+	<gfe:partitioned-region id="LOAN" copies="1"
+		cache-ref="cache">
+		<gfe:cache-writer ref="dummy-cache-writer" />
+	</gfe:partitioned-region>
+	<gfe:partitioned-region id="LOANLINEITEM"
+		copies="1" cache-ref="cache" colocated-with="LOAN">
+		<gfe:cache-writer ref="dummy-cache-writer" />
+	</gfe:partitioned-region>
 
+	<!-- A simple cache writer that just logs out data before it has been written 
+		to the region -->
+	<bean id="dummy-cache-writer" class="demo.pivotal.datasync.DummyCacheWriter" />
+
+	<!-- GemFire template beans to ease access to GemFire Regions -->
 	<bean id="gtDummy" class="org.springframework.data.gemfire.GemfireTemplate"
 		p:region-ref="DUMMY" />
 	<bean id="gtResort" class="org.springframework.data.gemfire.GemfireTemplate"
 		p:region-ref="RESORT" />
+	<bean id="gtLoan" class="org.springframework.data.gemfire.GemfireTemplate"
+		p:region-ref="LOAN" />
+	<bean id="gtLoanLineItem" class="org.springframework.data.gemfire.GemfireTemplate"
+		p:region-ref="LOANLINEITEM" />
 
 	<!-- DATA INJECTOR BEAN -->
+	<!-- This bean loads data up into the various regions at startup. -->
 	<bean id="InjectorBean" class="demo.pivotal.etl.InjectorBean"
 		init-method="loadData">
 		<property name="gtResort" ref="gtResort" />
@@ -115,23 +131,7 @@
 		<property name="loadData" value="${load.data.boolean}" />
 	</bean>
 
-	<!-- COLOCATION -->
-	<gfe:partitioned-region id="LOAN" copies="1" cache-ref="cache">
-		<gfe:cache-writer ref="dummy-cache-writer" />
-	</gfe:partitioned-region>
-	<bean id="gtLoan" class="org.springframework.data.gemfire.GemfireTemplate"
-		p:region-ref="LOAN" />
-
-	<gfe:partitioned-region id="LOANLINEITEM" copies="1" cache-ref="cache" colocated-with="LOAN">
-		<gfe:cache-writer ref="dummy-cache-writer" />
-	</gfe:partitioned-region>
-	<bean id="gtLoanLineItem" class="org.springframework.data.gemfire.GemfireTemplate"
-		p:region-ref="LOANLINEITEM" />
-
-	<!-- DATABASE WRITE THROUGH BEANS -->
-	<bean id="dummy-cache-writer" class="demo.pivotal.datasync.DummyCacheWriter" />
-
-	<!-- SPRING BATCH STUFF -->
+	<!-- Beans used to easily read from the CSV data files for the injector -->
 	<bean id="resortItemReader" class="org.springframework.batch.item.file.FlatFileItemReader">
 		<property name="resource" value="classpath:/data/RESORTS.csv" />
 		<property name="lineMapper">
@@ -159,12 +159,14 @@
 					<bean
 						class="org.springframework.batch.item.file.transform.DelimitedLineTokenizer">
 						<property name="quoteCharacter" value="&quot;" />
-						<property name="names" value="casefileId,lenderLoanNumber,borrowerLastName,executionType,remittanceType,servicing,rateLockExpirationDate,noteRate,loanAmount,submittedCommitmentExpirationDate,passThrough,passThroughPrice,netSRP,passThroughPriceNetSRP,product,userId" />
+						<property name="names"
+							value="casefileId,lenderLoanNumber,borrowerLastName,executionType,remittanceType,servicing,rateLockExpirationDate,noteRate,loanAmount,submittedCommitmentExpirationDate,passThrough,passThroughPrice,netSRP,passThroughPriceNetSRP,product,userId" />
 					</bean>
 				</property>
 				<property name="fieldSetMapper">
-						<bean class="org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper"
-							p:targetType="demo.pivotal.domain.Loan" />
+					<bean
+						class="org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper"
+						p:targetType="demo.pivotal.domain.Loan" />
 				</property>
 			</bean>
 		</property>
@@ -183,8 +185,9 @@
 					</bean>
 				</property>
 				<property name="fieldSetMapper">
-						<bean class="org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper"
-							p:targetType="demo.pivotal.domain.LoanLineItem" />
+					<bean
+						class="org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper"
+						p:targetType="demo.pivotal.domain.LoanLineItem" />
 				</property>
 			</bean>
 		</property>
@@ -192,13 +195,11 @@
 	</bean>
 
 	<!-- Bean to register functions for execution -->
-	<bean id="functionRegistrar" class="demo.pivotal.util.FunctionRegistrar">
-		<property name="functions">
-			<set>
-				<bean class="demo.pivotal.function.AggregateField2Function" />
-				<bean class="demo.pivotal.function.JoinQuery" />
-			</set>
-		</property>
-	</bean>
+	<gfe:function-service>
+		<gfe:function>
+			<bean class="demo.pivotal.function.AggregateField2Function" />
+			<bean class="demo.pivotal.function.JoinQuery" />
+		</gfe:function>
+	</gfe:function-service>
 
 </beans>

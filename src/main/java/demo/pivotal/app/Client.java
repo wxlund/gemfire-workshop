@@ -56,7 +56,7 @@ public class Client
 		System.out.println("5. Distributed Function");
 		System.out.println("6. Put for expiry");
 		System.out.println("7. Put for eviction");
-		System.out.println("8. Programatic CQ Registration");
+		System.out.println("8. Programmatic CQ Registration");
 		System.out
 				.println("9. Manual join vs. Distributed Function Join on all data");
 		System.out
@@ -188,6 +188,11 @@ public class Client
 		int key = 5678;
 
 		Dummy d = declarativeCachingDao.getEntityForId(key);
+		System.out.println("Got entity: " + d.toString());
+		System.out.println("Press any key to retrieve entity again");
+		System.in.read();
+
+		d = declarativeCachingDao.getEntityForId(key);
 		System.out.println("Got entity: " + d.toString());
 		System.out.println("Press any key to evict entity");
 		System.in.read();

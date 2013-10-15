@@ -11,5 +11,4 @@
 <stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="demo.pivotal.app.DB"/>
 <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="gemfire-workshop"/>
 <stringAttribute key="org.eclipse.jdt.launching.SOURCE_PATH_PROVIDER" value="org.eclipse.m2e.launchconfig.sourcepathProvider"/>
-<stringAttribute key="org.eclipse.jdt.launching.WORKING_DIRECTORY" value="${workspace_loc:gemfire-poc/target}"/>
 </launchConfiguration>

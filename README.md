@@ -4,6 +4,8 @@ This project is meant to be used as the basis of a GemFire 1/2 to 1 day developm
 
 The test scenarios are all driven via the embedded text console in STS, so you can quickly walk through the relevant code in the Client.java or various Datanode java classes.
 
+There is a coorseponding presentation you can use to guide the workshop at https://drive.google.com/a/gopivotal.com/file/d/0BxB8rdXPgFrNZFZzUXVZTHAzVG8/edit?usp=sharing 
+
 Please enter an enhancements as issues in github, or, better yet, clone this project and send a pull request with your changes. ;)
 
 ## Requirements

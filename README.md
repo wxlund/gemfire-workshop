@@ -4,7 +4,7 @@ This project is meant to be used as the basis of a GemFire 1/2 to 1 day developm
 
 The test scenarios are all driven via the embedded text console in STS, so you can quickly walk through the relevant code in the Client.java or various Datanode java classes.
 
-There is a coorseponding presentation you can use to guide the workshop at https://drive.google.com/a/gopivotal.com/file/d/0BxB8rdXPgFrNZFZzUXVZTHAzVG8/edit?usp=sharing 
+There is a corresponding presentation you can use to guide the workshop at https://drive.google.com/a/gopivotal.com/file/d/0BxB8rdXPgFrNZFZzUXVZTHAzVG8/edit?usp=sharing 
 
 Please enter an enhancements as issues in github, or, better yet, clone this project and send a pull request with your changes. ;)
 
@@ -26,7 +26,7 @@ In the resulting dialog, click the *Browse* button to browse to the folder you c
 Now that the project is imported, you can use the Run Configurations included in the project *launches* folder to run your demos.  To see the included launchers, you need select the *Run->Run Configurations...* menu option.  You will noticed items are prefixed with numbers to indicate the general order you should launch the items.
 
 ### Basic GemFire Demo
-To run through a basic GemFire demo, you can execute the *2-Locator*, *3-Datanode*, and *4-Client* launches.  From there, simply select the various menu options in the client and server consoles to run through various features of GemFire.  Typically, before executing a function, you should go to the relevant section in the Client or Datanode class to walk through it, and then go to the corresponding spring-cache-client.xml and spring-cache-server.xml Spring configurations to examine the configurations involved with that function.
+To run through a basic GemFire demo, you can execute the *02-Locator*, *03-Datanode*, and *04-Client* launches.  From there, simply select the various menu options in the client and server consoles to run through various features of GemFire.  Typically, before executing a function, you should go to the relevant section in the Client or Datanode class to walk through it, and then go to the corresponding spring-cache-client.xml and spring-cache-server.xml Spring configurations to examine the configurations involved with that function.
 
 ------
 
@@ -88,12 +88,23 @@ Both the Client and the Datanode have functions that you can run.  At startup, t
 
 4.	Add Dummy Data for Client CQ
 	This function is primarily meant to work with the automated CQ registration that has been done via the spring-cache-client.xml configuration.  This is different from the client function for doing a Programmatic CQ registration, and shows a different log message in the client console as a result.
-	
-### Database Backed Datanode
-Not converted yet.
-
-### WAN Replication
-Not converted yet.
 
 ### Secure Client and Server
-Not converted yet.
+To run through a secured GemFire demo, you can execute the *02-Locator*, and *05-SecureDatanode* to start.
+
+Before or after starting the secure server, you can show how security is enabled on the server by examining the launch for the secure data node.  Go into the *Arguments* tab and show the references to the authenticator and accessor helper classes.  Then you can actually take a look at the classes and the server config.
+
+Next, you'll want to try a few paths.  First, try to launch a *04-Client* and show the exception.
+
+After that, show the launch for *06-SecureClient (BadUser)* to show that passing bad info doesn't work either.
+
+Next, show the launch for *07-SecureClient (Jimi)*.  Launch it and show that an admin can login and do everything as normal.
+
+Next, show the launch for *08-SecureClient (Bob)*.  Launch it and show that Bob is blocked (forcibly!) from doing puts by executing function 1 from the client.
+	
+### Database Backed Datanode
+To run through a DB backed GemFire demo, you can execute the *01-DB*, *02-Locator*, and *09-DatanodeWithDB* launches.  From there, simply select the various menu options in the server console to run through various DB write-behind and write-through features of GemFire.  Typically, before executing a function, you should go to the relevant section in the DatanodeWithDB class to walk through it, and then go to the spring-cache-server.xml Spring configuration to examine the configurations involved with that function.
+
+### WAN Replication
+To run through a WAN enabled GemFire demo, you can execute the *02-Locator*, *10-Locator Site 2*, *11-WANDatanode Site 1*, and *12-WANDatanode Site 2* launches.  From there choose the various options in the server consoles on each "side" of the WAN to show data moving back and forth between sites.
+

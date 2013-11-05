@@ -42,6 +42,14 @@
 		<property name="parent" value="${data.location}" />
 	</bean>
 
+	<!-- A persistent disk store to use when storing data for persistence, overflow, 
+		etc. -->
+	<gfe:disk-store id="localStore" max-oplog-size="10"
+		cache-ref="cache">
+		<gfe:disk-dir location="#{findDiskDir.getSelected().getAbsolutePath()}"
+			max-size="10" />
+	</gfe:disk-store>
+
 	<bean id="cache-logger" class="demo.pivotal.util.CacheLogger" />
 
 	<!-- gemfire base cache configuration -->
@@ -52,80 +60,40 @@
 	<gfe:cache-server id="advanced-config" auto-startup="true"
 		cache-ref="cache" port="#{portGenerator.generatePort()}" />
 
-	<bean id="diskStore" class="demo.pivotal.util.GemfireDiskStore"
-		init-method="init">
-		<property name="cache" ref="cache" />
-		<property name="baseDir" value="#{findDiskDir.getSelected()}" />
-		<property name="diskStoreName" value="default" />
-	</bean>
-
-	<bean id="gatewayQueueAttributes" class="com.gemstone.gemfire.cache.util.GatewayQueueAttributes">
-		<property name="diskStoreName" value="#{diskStore.getStore().getName()}" />
-		<property name="enablePersistence" value="false" />
-		<property name="batchSize" value="1000" />
-		<property name="maximumQueueMemory" value="32" />
-	</bean>
-
 	<!-- DB WRITE THROUGH REGION  -->
-	<gfe:replicated-region id="RESORT_THRU" cache-ref="cache" name="RESORT_THRU"> 
+	<gfe:replicated-region id="RESORT_THRU" cache-ref="cache" > 
 		<gfe:cache-listener ref="cache-logger" /> 
 		<gfe:cache-loader ref="resort-cache-loader"/>
 		<gfe:cache-writer ref="resort-cache-writer" /> 
 	</gfe:replicated-region>
 
 	<!-- DB WRITE BEHIND REGION -->
-	<bean id="RESORT_BEHIND" p:name="RESORT_BEHIND"
-		class="org.springframework.data.gemfire.RegionFactoryBean"
-		p:cache-ref="cache">
-		<property name="cacheListeners" ref="cache-logger" />
-		<property name="cacheLoader" ref="resort-cache-loader"/>
-		<!-- <property name="cacheLoader" ref="cache-loader-resort" /> -->
-		<property name="attributes">
-			<bean class="org.springframework.data.gemfire.RegionAttributesFactoryBean"
-				p:initial-capacity="1024" p:enable-gateway="true">
-				<property name="partitionAttributes">
-					<bean
-						class="org.springframework.data.gemfire.PartitionAttributesFactoryBean"
-						p:redundant-copies="1" />
-				</property>
-			</bean>
-		</property>
-	</bean>
+	<gfe:partitioned-region id="RESORT_BEHIND" cache-ref="cache" copies="1" initial-capacity="1024">
+		<gfe:cache-listener ref="cache-logger" /> 
+		<gfe:cache-loader ref="resort-cache-loader"/>
+		<gfe:async-event-queue-ref bean="write-behind-queue"/>
+	</gfe:partitioned-region>
 
+	<gfe:async-event-queue id="write-behind-queue"
+		cache-ref="cache" batch-size="1000" persistent="true" disk-store-ref="localStore"
+		maximum-queue-memory="32">
+		<gfe:async-event-listener>
+			<bean class="demo.pivotal.datasync.ResortWriteBehind" />
+		</gfe:async-event-listener>
+	</gfe:async-event-queue>
+
+	<!-- TEMPLATES -->
 	<bean id="gtResortThru" class="org.springframework.data.gemfire.GemfireTemplate"
 		p:region-ref="RESORT_THRU" />
 		
 	<bean id="gtResortBehind" class="org.springframework.data.gemfire.GemfireTemplate"
 		p:region-ref="RESORT_BEHIND" />
 
-	<!-- RESORT INJECTOR BEAN -->
-	<bean id="InjectorBean" class="demo.pivotal.etl.InjectorBean"
-		init-method="loadData">
-		<property name="gtResort" ref="gtResort" />
-		<property name="resortItemReader" ref="resortItemReader" />
-		<property name="gtLoan" ref="gtLoan" />
-		<property name="loanItemReader" ref="loanItemReader" />
-		<property name="gtLoanLineItem" ref="gtLoanLineItem" />
-		<property name="loanLineItemReader" ref="loanLineItemReader" />
-		<property name="loadData" value="${load.data.boolean}" />
-	</bean>
-
 	<!-- DATABASE READ THROUGH BEANS -->
 	<bean id="resort-cache-loader" class="demo.pivotal.datasync.ResortCacheLoader" /> 
 
 	<!-- DATABASE WRITE THROUGH BEANS -->
-	<bean id="resort-cache-writer" class="demo.pivotal.datasync.ResortWriteThrough" /> 
-
-	<!-- DATABASE WRITE BEHIND BEANS -->
-	<bean id="resort-write-behind-listener" class="demo.pivotal.datasync.ResortWriteBehind" />
-	<bean id="db-write-behind" class="demo.pivotal.datasync.DBWriteBehindHub"
-		init-method="start" lazy-init="false">
-		<constructor-arg>
-			<array>
-				<ref bean="resort-write-behind-listener" />
-			</array>
-		</constructor-arg>
-	</bean>
+	<bean id="resort-cache-writer" class="demo.pivotal.datasync.ResortWriteThrough" />
 
 	<!-- DB Datasource -->
 	<bean class="org.apache.commons.dbcp.BasicDataSource"
@@ -135,64 +103,4 @@
 		<property name="username" value="sa" />
 	</bean>
 
-	<!-- SPRING BATCH STUFF -->
-	<bean id="resortItemReader" class="org.springframework.batch.item.file.FlatFileItemReader">
-		<property name="resource" value="classpath:/data/RESORTS.csv" />
-		<property name="lineMapper">
-			<bean class="org.springframework.batch.item.file.mapping.DefaultLineMapper">
-				<property name="lineTokenizer">
-					<bean
-						class="org.springframework.batch.item.file.transform.DelimitedLineTokenizer">
-						<property name="quoteCharacter" value="&quot;" />
-						<property name="names" value="ID,Name" />
-					</bean>
-				</property>
-				<property name="fieldSetMapper">
-					<bean class="demo.pivotal.etl.ResortMapper" />
-				</property>
-			</bean>
-		</property>
-		<property name="linesToSkip" value="1" />
-	</bean>
-
-	<bean id="loanItemReader" class="org.springframework.batch.item.file.FlatFileItemReader">
-		<property name="resource" value="classpath:/data/LOAN.csv" />
-		<property name="lineMapper">
-			<bean class="org.springframework.batch.item.file.mapping.DefaultLineMapper">
-				<property name="lineTokenizer">
-					<bean
-						class="org.springframework.batch.item.file.transform.DelimitedLineTokenizer">
-						<property name="quoteCharacter" value="&quot;" />
-						<property name="names" value="casefileId,lenderLoanNumber,borrowerLastName,executionType,remittanceType,servicing,rateLockExpirationDate,noteRate,loanAmount,submittedCommitmentExpirationDate,passThrough,passThroughPrice,netSRP,passThroughPriceNetSRP,product,userId" />
-					</bean>
-				</property>
-				<property name="fieldSetMapper">
-						<bean class="org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper"
-							p:targetType="demo.pivotal.domain.Loan" />
-				</property>
-			</bean>
-		</property>
-		<property name="linesToSkip" value="1" />
-	</bean>
-
-	<bean id="loanLineItemReader" class="org.springframework.batch.item.file.FlatFileItemReader">
-		<property name="resource" value="classpath:/data/LOANITEM.csv" />
-		<property name="lineMapper">
-			<bean class="org.springframework.batch.item.file.mapping.DefaultLineMapper">
-				<property name="lineTokenizer">
-					<bean
-						class="org.springframework.batch.item.file.transform.DelimitedLineTokenizer">
-						<property name="quoteCharacter" value="&quot;" />
-						<property name="names" value="loanKey,lineItemId,paymentDate,amount" />
-					</bean>
-				</property>
-				<property name="fieldSetMapper">
-						<bean class="org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper"
-							p:targetType="demo.pivotal.domain.LoanLineItem" />
-				</property>
-			</bean>
-		</property>
-		<property name="linesToSkip" value="1" />
-	</bean>
-	
 </beans>

@@ -52,19 +52,13 @@
 	<gfe:cache-server id="advanced-config" auto-startup="true"
 		cache-ref="cache" port="#{portGenerator.generatePort()}" />
 
-	<bean id="diskStore" class="demo.pivotal.util.GemfireDiskStore"
-		init-method="init">
-		<property name="cache" ref="cache" />
-		<property name="baseDir" value="#{findDiskDir.getSelected()}" />
-		<property name="diskStoreName" value="default" />
-	</bean>
-
-	<bean id="gatewayQueueAttributes" class="com.gemstone.gemfire.cache.util.GatewayQueueAttributes">
-		<property name="diskStoreName" value="#{diskStore.getStore().getName()}" />
-		<property name="enablePersistence" value="false" />
-		<property name="batchSize" value="1000" />
-		<property name="maximumQueueMemory" value="32" />
-	</bean>
+	<!-- A persistent disk store to use when storing data for persistence, overflow, 
+		etc. -->
+	<gfe:disk-store id="localStore" max-oplog-size="10"
+		cache-ref="cache">
+		<gfe:disk-dir location="#{findDiskDir.getSelected().getAbsolutePath()}"
+			max-size="10" />
+	</gfe:disk-store>
 
 	<!-- GEMFIRE REGION DEFINITIONS -->
 	<gfe:partitioned-region id="DUMMY" copies="1"
@@ -88,11 +82,6 @@
 		<gfe:cache-writer ref="dummy-cache-writer" />
 		<gfe:eviction threshold="2" type="ENTRY_COUNT" action="OVERFLOW_TO_DISK" />
 	</gfe:partitioned-region>
-
-	<gfe:disk-store id="localStore" max-oplog-size="10" cache-ref="cache">
-		<gfe:disk-dir location="#{findDiskDir.getSelected().getAbsolutePath()}"
-			max-size="10" />
-	</gfe:disk-store>
 
 	<bean id="gtDummy" class="org.springframework.data.gemfire.GemfireTemplate"
 		p:region-ref="DUMMY" />
@@ -188,13 +177,12 @@
 	</bean>
 
 	<!-- Bean to register functions for execution -->
-	<bean id="functionRegistrar" class="demo.pivotal.util.FunctionRegistrar">
-		<property name="functions">
-			<set>
-				<bean class="demo.pivotal.function.AggregateField2Function" />
-			</set>
-		</property>
-	</bean>
+	<gfe:function-service>
+		<gfe:function>
+			<bean class="demo.pivotal.function.AggregateField2Function" />
+			<bean class="demo.pivotal.function.JoinQuery" />
+		</gfe:function>
+	</gfe:function-service>
 
 	<!-- Spring Security -->
 	<security:authentication-manager id="authenticationManager">

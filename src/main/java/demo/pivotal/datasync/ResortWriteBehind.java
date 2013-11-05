@@ -12,12 +12,12 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 import com.gemstone.gemfire.cache.CacheWriterException;
 import com.gemstone.gemfire.cache.Declarable;
-import com.gemstone.gemfire.cache.util.GatewayEvent;
-import com.gemstone.gemfire.cache.util.GatewayEventListener;
+import com.gemstone.gemfire.cache.asyncqueue.AsyncEvent;
+import com.gemstone.gemfire.cache.asyncqueue.AsyncEventListener;
 
 import demo.pivotal.domain.Resort;
 
-public class ResortWriteBehind implements GatewayEventListener, Declarable {
+public class ResortWriteBehind implements AsyncEventListener, Declarable {
 
 	private static Logger logger = LoggerFactory.getLogger(ResortWriteBehind.class);
 
@@ -31,7 +31,7 @@ public class ResortWriteBehind implements GatewayEventListener, Declarable {
 	 * 
 	 * @param ge
 	 */
-	protected void process(GatewayEvent ge) {
+	protected void process(AsyncEvent<String,Resort> ge) {
 
 		try {
 			logger.info("DB Write behind START ");
@@ -40,7 +40,7 @@ public class ResortWriteBehind implements GatewayEventListener, Declarable {
 				logger.info("Before Adding to Cache: " + messageLog(ge));
 				this.jdbcTemplate = new JdbcTemplate(dataSource);
 
-				Resort r = (Resort) ge.getDeserializedValue();
+				Resort r = ge.getDeserializedValue();
 
 				this.jdbcTemplate.update("insert into resort values(?,?)",
 						r.getId(), r.getName());
@@ -48,7 +48,7 @@ public class ResortWriteBehind implements GatewayEventListener, Declarable {
 			} else if (ge.getOperation().isUpdate()) {
 				logger.info("Before Updated in Cache: " + messageLog(ge));
 				this.jdbcTemplate = new JdbcTemplate(dataSource);
-				Resort r = (Resort) ge.getDeserializedValue();
+				Resort r = ge.getDeserializedValue();
 
 				this.jdbcTemplate.update("update resort " + "set name = ? "
 						+ "where resort_id = ?", r.getName(), r.getId());
@@ -59,8 +59,12 @@ public class ResortWriteBehind implements GatewayEventListener, Declarable {
 		}
 	}
 
-	public boolean processEvents(List<GatewayEvent> events) {
-		for (GatewayEvent ge : events) {
+	@SuppressWarnings("rawtypes")
+	@Override
+	public boolean processEvents(List<AsyncEvent> events) {
+		for (AsyncEvent event : events) {
+			@SuppressWarnings("unchecked")
+			AsyncEvent<String,Resort> ge = (AsyncEvent<String,Resort>)event;
 			process(ge);
 		}
 		return true;
@@ -75,8 +79,9 @@ public class ResortWriteBehind implements GatewayEventListener, Declarable {
 
 	}
 
-	private String messageLog(GatewayEvent event) {
+	private String messageLog(AsyncEvent<String,Resort> event) {
 		return "[Event: + " + event.getOperation() + "[" + event.getKey() + "=" + event.getDeserializedValue()
 				+ "]";
 	}
+
 }

@@ -14,6 +14,8 @@ public class DB {
 
         try
 		{
+        	System.out.println("\nDB Started");
+        	System.out.println("Go to http://localhost:8082 for DB Web Interface");
 			Thread.sleep(Long.MAX_VALUE);
 		}
 		finally

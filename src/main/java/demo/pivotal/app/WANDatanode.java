@@ -80,8 +80,15 @@ public class WANDatanode
 
 		// update resort
 		Resort r = gt.get("505");
-		r.setName("Disney Land Resort UPDATED-" + String.valueOf(System.currentTimeMillis()));
-		gt.put(r.getId(), r);
+		if(r != null)
+		{
+			r.setName("Disney Land Resort UPDATED-" + String.valueOf(System.currentTimeMillis()));
+			gt.put(r.getId(), r);
+		}
+		else
+		{
+			System.out.println("No resort with ID 505 found.");
+		}
 	}
 
 }

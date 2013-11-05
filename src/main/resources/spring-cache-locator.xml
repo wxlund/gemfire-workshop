@@ -1,24 +1,51 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gfe="http://www.springframework.org/schema/gemfire"
-    xmlns:context="http://www.springframework.org/schema/context" xmlns:util="http://www.springframework.org/schema/util"
-    xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gfe="http://www.springframework.org/schema/gemfire"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
         http://www.springframework.org/schema/gemfire classpath:org/springframework/data/gemfire/config/spring-gemfire.xsd
         http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd
         http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
 
-    <context:property-placeholder system-properties-mode="OVERRIDE" location="classpath:/common.properties" />
+	<context:property-placeholder
+		system-properties-mode="OVERRIDE" location="classpath:/common.properties" />
 
-    <!-- create a unique directory base directory for this node -->
-    <bean id="findDiskDir" class="demo.pivotal.util.PersistenceDirectoryGenerator" destroy-method="unlock" init-method="findDirectory">
-        <property name="parent" value="${data.location}/locator" />
-    </bean>
+	<!-- create a unique directory base directory for this node -->
+	<bean id="findDiskDir" class="demo.pivotal.util.PersistenceDirectoryGenerator"
+		destroy-method="unlock" init-method="findDirectory">
+		<property name="parent" value="${data.location}/locator" />
+	</bean>
 
-    <bean id="locator" class="demo.pivotal.util.LocatorBean" init-method="startLocator" destroy-method="stopLocator">
-        <property name="port1" value="${locator.port1}" />
-        <property name="port2" value="${locator.port2}" />
-        <property name="throwOnBindFailure" value="false" />
-        <property name="state" value="#{findDiskDir.getSelected()}/locator.state" />
-        <property name="log" value="#{findDiskDir.getSelected()}/locator.log" />
-        <property name="locators" value="${locator.host1}[${locator.port1}],${locator.host2}[${locator.port2}]"/>
-    </bean>
+	<beans profile="site1" >
+		<bean id="locator" class="demo.pivotal.util.LocatorBean"
+			init-method="startLocator" destroy-method="stopLocator">
+			<property name="port1" value="${locator.port1}" />
+			<property name="port2" value="${locator.port2}" />
+			<property name="throwOnBindFailure" value="false" />
+			<property name="state" value="#{findDiskDir.getSelected()}/locator.state" />
+			<property name="log" value="#{findDiskDir.getSelected()}/locator.log" />
+			<property name="locators"
+				value="${locator.host1}[${locator.port1}],${locator.host2}[${locator.port2}]" />
+			<property name="remoteLocators"
+				value="${locator2.host1}[${locator2.port1}],${locator2.host2}[${locator2.port2}]" />
+			<property name="distributedSystemId" value="1" />
+		</bean>
+	</beans>
+
+	<beans profile="site2">
+		<bean id="locator" class="demo.pivotal.util.LocatorBean"
+			init-method="startLocator" destroy-method="stopLocator">
+			<property name="port1" value="${locator2.port1}" />
+			<property name="port2" value="${locator2.port2}" />
+			<property name="throwOnBindFailure" value="false" />
+			<property name="state" value="#{findDiskDir.getSelected()}/locator.state" />
+			<property name="log" value="#{findDiskDir.getSelected()}/locator.log" />
+			<property name="locators"
+				value="${locator2.host1}[${locator2.port1}],${locator2.host2}[${locator2.port2}]" />
+			<property name="remoteLocators"
+				value="${locator.host1}[${locator.port1}],${locator.host2}[${locator.port2}]" />
+			<property name="distributedSystemId" value="2" />
+		</bean>
+	</beans>
 </beans>

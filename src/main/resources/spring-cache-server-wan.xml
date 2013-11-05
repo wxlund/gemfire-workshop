@@ -18,24 +18,6 @@
 	<context:property-placeholder
 		system-properties-mode="OVERRIDE" location="classpath:/common.properties" />
 
-	<!-- gemfire.properties file for the cache server -->
-	<bean id="props"
-		class="org.springframework.beans.factory.config.PropertiesFactoryBean">
-		<property name="locations">
-			<list>
-				<value>classpath:gemfire-server.properties</value>
-			</list>
-		</property>
-		<property name="properties">
-			<props>
-				<prop key="locators">${locator.host1}[${locator.port1}],${locator.host2}[${locator.port2}]
-				</prop>
-				<prop key="security-client-authenticator">${client-auth}</prop>
-				<prop key="security-client-accessor">${client-accessor}</prop>
-			</props>
-		</property>
-	</bean>
-
 	<!-- when we run multiple cache servers on the same node, we need unique 
 		server ports -->
 	<bean id="portGenerator" class="demo.pivotal.util.ServerPortGenerator" />
@@ -51,104 +33,83 @@
 	<!-- gemfire base cache configuration -->
 	<gfe:cache id="cache" properties-ref="props"
 		cache-xml-location="classpath:cache-server.xml" />
-		
-	<!-- WAN -->
-	<bean id="gatewayHub" class="demo.pivotal.datasync.GatewayHubBean"
-		p:id="${wan.site}" p:port="${wan.port}" p:cache-ref="cache">
-		<property name="gateways">
-			<list>
-				<bean class="demo.pivotal.datasync.GatewayBean" p:id="${wan.remote.id}" p:attribs-ref="gatewayQueueAttributes">
-					<property name="endpoints">
-						<bean class="demo.pivotal.datasync.GatewayEndpointBean"
-							p:id="${wan.remote.id}-${wan.remote.host}" p:host="${wan.remote.host}"
-							p:port="${wan.remote.port}" />
-					</property>
-				</bean>
-			</list>
-		</property>	
-	</bean>
 
-	<!-- this makes the cache server be a 'server' in the grid -->
+	<!-- this makes the cache server become a 'server' in the grid -->
 	<gfe:cache-server id="advanced-config" auto-startup="true"
 		cache-ref="cache" port="#{portGenerator.generatePort()}" />
-
-	<bean id="diskStore" class="demo.pivotal.util.GemfireDiskStore"
-		init-method="init">
-		<property name="cache" ref="cache" />
-		<property name="baseDir" value="#{findDiskDir.getSelected()}" />
-		<property name="diskStoreName" value="default" />
-	</bean>
-
-	<bean id="gatewayQueueAttributes" class="com.gemstone.gemfire.cache.util.GatewayQueueAttributes"
-		p:diskStoreName="#{diskStore.getStore().getName()}" 
-		p:enablePersistence="false"
-		p:batchSize="1000"
-		p:maximumQueueMemory="32"
-		p:batchConflation="true" />
+		
+	<!-- A persistent disk store to use when storing data for persistence, overflow, 
+		etc. -->
+	<gfe:disk-store id="localStore" max-oplog-size="10"
+		cache-ref="cache">
+		<gfe:disk-dir location="#{findDiskDir.getSelected().getAbsolutePath()}"
+			max-size="10" />
+	</gfe:disk-store>
 
 	<!-- GEMFIRE REGION DEFINITIONS -->
-	<gfe:partitioned-region id="DUMMY" copies="1"
-		name="DUMMY" cache-ref="cache">
-		<gfe:cache-writer ref="dummy-cache-writer" />
+	<gfe:partitioned-region id="RESORT_REPL" copies="1"
+		cache-ref="cache">
+		<gfe:cache-listener ref="cache-logger" />
+		<gfe:gateway-sender-ref bean="gateway-sender"/>
 	</gfe:partitioned-region>
 
-	<gfe:replicated-region id="RESORT" cache-ref="cache"
-		name="RESORT">
-		<gfe:cache-listener ref="cache-logger" />
-	</gfe:replicated-region>
-
-	<bean id="gtDummy" class="org.springframework.data.gemfire.GemfireTemplate"
-		p:region-ref="DUMMY" />
-	<bean id="gtResort" class="org.springframework.data.gemfire.GemfireTemplate"
-		p:region-ref="RESORT" />
-
-	<!-- RESORT INJECTOR BEAN -->
-	<bean id="InjectorBean" class="demo.pivotal.etl.InjectorBean"
-		init-method="loadData">
-		<property name="gtResort" ref="gtResort" />
-		<property name="resortItemReader" ref="resortItemReader" />
-		<property name="loadData" value="${load.data.boolean}" />
-	</bean>
-
-	<!-- DATABASE WRITE THROUGH BEANS -->
-	<bean id="dummy-cache-writer" class="demo.pivotal.datasync.DummyCacheWriter" />
-
-	<!-- SPRING BATCH STUFF -->
-	<bean id="resortItemReader" class="org.springframework.batch.item.file.FlatFileItemReader">
-		<property name="resource" value="classpath:/data/RESORTS.csv" />
-		<property name="lineMapper">
-			<bean class="org.springframework.batch.item.file.mapping.DefaultLineMapper">
-				<property name="lineTokenizer">
-					<bean
-						class="org.springframework.batch.item.file.transform.DelimitedLineTokenizer">
-						<property name="quoteCharacter" value="&quot;" />
-						<property name="names" value="ID,Name" />
-					</bean>
-				</property>
-				<property name="fieldSetMapper">
-					<bean class="demo.pivotal.etl.ResortMapper" />
-				</property>
-			</bean>
-		</property>
-		<property name="linesToSkip" value="1" />
-	</bean>
-
-	<!-- WAN Gateway -->
-	<bean id="RESORT_REPL" class="org.springframework.data.gemfire.RegionFactoryBean"
-		p:cache-ref="cache" p:cacheListeners-ref="cache-logger">
-		<property name="attributes">
-			<bean class="org.springframework.data.gemfire.RegionAttributesFactoryBean"
-				p:enableGateway="true">
-				<property name="partitionAttributes">
-					<bean
-						class="org.springframework.data.gemfire.PartitionAttributesFactoryBean"
-						p:redundant-copies="1" />
-				</property>
-			</bean>
-		</property>
-	</bean>
-	
 	<bean id="gtResortRepl" class="org.springframework.data.gemfire.GemfireTemplate"
 		p:region-ref="RESORT_REPL" />
+
+	<beans profile="site1">
+		<!-- gemfire.properties file for the cache server -->
+		<bean id="props"
+			class="org.springframework.beans.factory.config.PropertiesFactoryBean">
+			<property name="locations">
+				<list>
+					<value>classpath:gemfire-server.properties</value>
+				</list>
+			</property>
+			<property name="properties">
+				<props>
+					<prop key="locators">${locator.host1}[${locator.port1}],${locator.host2}[${locator.port2}]</prop>
+				</props>
+			</property>
+		</bean>
+
+		<!-- WAN -->
+		<!-- The event sender to send to remote systems -->
+		<gfe:gateway-sender id="gateway-sender" cache-ref="cache"
+			remote-distributed-system-id="2" batch-size="1000" persistent="true"
+			disk-store-ref="localStore" maximum-queue-memory="32"
+			enable-batch-conflation="true" />
 	
+		<!-- The receiver for remote events -->
+		<gfe:gateway-receiver id="gateway-receiver"
+			cache-ref="cache" start-port="30000" end-port="31999" />
+	</beans>
+	
+	<beans profile="site2">
+		<!-- gemfire.properties file for the cache server -->
+		<bean id="props"
+			class="org.springframework.beans.factory.config.PropertiesFactoryBean">
+			<property name="locations">
+				<list>
+					<value>classpath:gemfire-server.properties</value>
+				</list>
+			</property>
+			<property name="properties">
+				<props>
+					<prop key="locators">${locator2.host1}[${locator2.port1}],${locator2.host2}[${locator2.port2}]</prop>
+				</props>
+			</property>
+		</bean>
+
+		<!-- WAN -->
+		<!-- The event sender to send to remote systems -->
+		<gfe:gateway-sender id="gateway-sender" cache-ref="cache"
+			remote-distributed-system-id="1" batch-size="1000" persistent="true"
+			disk-store-ref="localStore" maximum-queue-memory="32"
+			enable-batch-conflation="true" />
+	
+		<!-- The receiver for remote events -->
+		<gfe:gateway-receiver id="gateway-receiver"
+			cache-ref="cache" start-port="32000" end-port="33999" />
+	</beans>	
+		
 </beans>
